@@ -68,10 +68,10 @@ All modules can be upgraded. Upgrades strengthen their effect but always come wi
 ## 🔀 Randomization & Fairness
 
 - **Random Shop** each round with 3 slots:  
-  - 1 × **Income option** (e.g. generator)  
-  - 1 × **Control option** (e.g. battery, improvements)  
+  - 1 × **Income option** (generator)  
+  - 1 × **Control option** (battery or improvement)  
   - 1 × **Wildcard** (special module, event, etc.)  
-- Ensures variety between runs while always offering survival tools.  
+- Guarantees that survival options are always offered, while still creating variety.  
 - No single fixed path – every game plays out differently.
 
 ---
@@ -101,7 +101,7 @@ Events are rare but impactful, ensuring that runs do not become fully predictabl
 - Minimalist, abstract UI (no illustrations; bars, chips, HUD only).  
 - Playable on both smartphones and desktop browsers (PWA).  
 - Runs should be short, tense, and different every time.  
-- No “fixed winning strategy” – decisions depend on random shop offers and market swings.  
+- No “fixed winning strategy” – decisions depend on random shop offers, wear escalation, and market swings.  
 
 ---
 
@@ -109,7 +109,7 @@ Events are rare but impactful, ensuring that runs do not become fully predictabl
 
 - [ ] Basic UI (HUD, machine, shop, actions)  
 - [ ] Core state engine (energy, money, wear, price)  
-- [ ] Random shop logic  
+- [ ] Random shop logic (fair slots)  
 - [ ] Module design & upgrades  
 - [ ] Event system (e.g. emergency battery, energy crisis)  
 - [ ] Balancing & test runs  
