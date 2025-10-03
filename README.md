@@ -53,6 +53,18 @@ Each module type improves the machine in one area while introducing new pressure
 
 All modules can be upgraded. Upgrades strengthen their effect but always come with a downside.
 
+---
+
+## ♻️ Wear & Repairs
+
+- **Wear** (damage per round) is primarily caused by modules.  
+  - Each module adds its own wear value.  
+  - Additional escalation occurs as more modules are installed (synergy effect).  
+- **Repairs** reduce damage in fixed packages (e.g. 10% repair for 6💰).  
+- Repair costs do not scale with damage level, but increasing wear over time makes constant repairs unavoidable.
+
+---
+
 ## 🔀 Randomization & Fairness
 
 - **Random Shop** each round with 3 slots:  
@@ -61,6 +73,15 @@ All modules can be upgraded. Upgrades strengthen their effect but always come wi
   - 1 × **Wildcard** (special module, event, etc.)  
 - Ensures variety between runs while always offering survival tools.  
 - No single fixed path – every game plays out differently.
+
+---
+
+## 💥 Events
+
+Occasional events add chaos and force buffer planning, for example:  
+- **Emergency Battery** → one-time +10⚡ for a fixed price  
+- **Energy Crisis** → temporary price spike  
+Events are rare but impactful, ensuring that runs do not become fully predictable.
 
 ---
 
