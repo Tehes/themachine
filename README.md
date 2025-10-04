@@ -1,118 +1,140 @@
 # The Machine
 
-**The Machine** is an experimental, turn-based engine-building survival game, developed as a Progressive Web App (PWA).  
-The player manages a single abstract machine that produces money, consumes energy, and inevitably wears down.  
-The goal is simple: survive as many rounds as possible before the machine collapses.
+**The Machine** is an experimental, real-time survival simulation and engine-building game,
+developed as a Progressive Web App (PWA).\
+The player manages a single abstract machine that continuously produces money, consumes energy, and
+inevitably wears down over time.\
+The goal: survive as long as possible before the system collapses.
 
 ---
 
 ## ⚠️ Status
 
-This project is **under development**.  
-It is currently a design prototype and not a finished, playable game.  
-The README describes the concept and planned features.
-
-Feedback and contributions are welcome once a first prototype is running.
+This project is **under development**.\
+It is currently a design prototype — not yet a finished, playable game.\
+This README describes the concept and planned features.
 
 ---
 
 ## 🎯 Core Goal
 
-- Survive as long as possible → **score = number of rounds reached**
-- Keep the machine running by:
-  - Buying and managing **energy**
-  - Repairing **damage**
+- Survive as long as possible → **score = time survived**
+- Keep the machine alive by:
+  - Managing **energy**
+  - Repairing **wear**
   - Installing and upgrading **modules**
 
 ---
 
-## ⚙️ Game Loop
+## 🔁 Core Loop
 
-Each round consists of:
+The machine runs in continuous **ticks** — short real-time intervals that represent system cycles.
 
-1. The machine produces money (`+💰`).  
-2. Energy is consumed (`−⚡`).  
-3. Wear increases (`+% damage`).  
-4. Energy price adjusts (long-term upward drift, short-term fluctuations).  
-5. The player chooses **one action**: buy energy, repair, or build/upgrade a module.
+Each tick:
 
-The run ends when:
-- Energy reaches **0** → the machine stops.  
-- Damage reaches **100%** → the machine breaks.  
+- Produces money (`+💰`)
+- Consumes energy (`−⚡`)
+- Increases wear (`+💥`)
 
----
-
-## 🔩 Modules
-
-Modules are **permanent machine parts** with clear trade-offs.  
-Each module type improves the machine in one area while introducing new pressure in another:
-
-- **Generators** → increase money production, but raise energy use and wear  
-- **Batteries** → increase energy capacity, but add to energy consumption  
-- **Improvements** → reduce wear or stabilize the machine, but usually increase consumption  
-
-All modules can be upgraded. Upgrades strengthen their effect but always come with a downside.
+The player can take actions (buy energy, repair, activate or upgrade modules) at any time —\
+but time and deterioration never stop.\
+When energy reaches **0** or damage hits **100%**, the machine fails.
 
 ---
 
-## ♻️ Wear & Repairs
+## ⚙️ System Overview
 
-- **Wear** (damage per round) is primarily caused by modules.  
-  - Each module adds its own wear value.  
-  - Additional escalation occurs as more modules are installed (synergy effect).  
-- **Repairs** reduce damage in fixed packages (e.g. 10% repair for 6💰).  
-- Repair costs do not scale with damage level, but increasing wear over time makes constant repairs unavoidable.
+All key systems are connected through one feedback triangle:
 
----
+```
+Money ↑ → Energy ↓ → Wear ↑
+     ↖---------------↙
+```
 
-## 🔀 Randomization & Fairness
+- **Money** funds upgrades and repairs, but upgrades increase consumption.
+- **Energy** keeps the system alive but drains constantly.
+- **Wear** rises each tick — faster when the machine runs hot.
+- **Tick speed** accelerates over time, intensifying the cycle.
 
-- **Random Shop** each round with 3 slots:  
-  - 1 × **Income option** (generator)  
-  - 1 × **Control option** (battery or improvement)  
-  - 1 × **Wildcard** (special module, event, etc.)  
-- Guarantees that survival options are always offered, while still creating variety.  
-- No single fixed path – every game plays out differently.
+Balancing these three axes is the heart of survival: every optimization pushes another part closer
+to collapse.
 
 ---
 
-## 💥 Events
+## 🔩 Modules & Bays – Building the Machine
 
-Occasional events add chaos and force buffer planning, for example:  
-- **Emergency Battery** → one-time +10⚡ for a fixed price  
-- **Energy Crisis** → temporary price spike  
-Events are rare but impactful, ensuring that runs do not become fully predictable.
+The machine consists of multiple **bays** arranged in a fixed layout.\
+All bays exist from the start — but most are inactive until the player installs them.
+
+- **Fixed structure:** no random shop or rerolling. All potential modules are visible.
+- **Start state:** only core modules (e.g. Generator + Battery) are active.
+- **Activation:** inactive bays can be installed anytime for a cost, adding their effects to the
+  system.
+- **Upgrading:** installed bays can be enhanced, increasing benefits and drawbacks.
+- **Categories:**
+  - **Generator** – increases production but raises energy use & wear
+  - **Battery** – expands energy capacity but raises consumption
+  - **Cooling** – slows wear & tick rate but reduces output
+  - **Durability / Stabilizer** – reduces wear permanently
+  - **Overclock** – boosts output, speeds up ticks, adds stress
+- **Persistence:** bays remain consistent throughout a run; no RNG churn.
+- **Emergent variety:** runs diverge through activation order, upgrade timing, and risk management —
+  not through randomness.
+
+---
+
+## 💥 Wear & Repairs
+
+- **Wear** increases each tick, based on tick speed and system stress.
+- Each installed module adds to wear in unique proportions.
+- **Cooling** and **Durability** modules mitigate wear buildup.
+- **Repairs** reduce accumulated damage but cost money — they buy time, not safety.
+- Over time, wear accelerates faster than repairs can offset it.
+
+---
+
+## ⚡ Events & Market Dynamics
+
+Occasional events and market shifts add unpredictability to the system:
+
+- **Energy price drift:** trends upward over time, with small fluctuations per tick.
+- **Instability events:** temporary modifiers to tick speed, wear, or consumption.
+- **Emergency actions:** one-time relief options (e.g., temporary battery injection).
+
+Events are rare but impactful — designed to disrupt routines and force adaptive play.
 
 ---
 
 ## 🧮 Balancing (initial draft values)
 
-- Start money: **5**  
-- Base production: **+1💰/round**  
-- Base consumption: **−1⚡/round**  
-- Battery capacity: **10⚡**  
-- Starting damage: **0%**  
-- Energy price: **1.20💰/⚡**, grows by ~**1.5% per round** (with light random fluctuation)  
+- Start money: **5**
+- Base production: **+1💰/tick**
+- Base consumption: **−1⚡/tick**
+- Battery capacity: **10⚡**
+- Starting damage: **0%**
+- Energy price: **1.20💰/⚡**, increases by ~**1.5% per tick** (light fluctuation)
+- Starting tick duration: **10 seconds** (accelerates over time)
 
 ---
 
-## 🚀 Vision
+## 🎨 Interface & Experience
 
-- Minimalist, abstract UI (no illustrations; bars, chips, HUD only).  
-- Playable on both smartphones and desktop browsers (PWA).  
-- Runs should be short, tense, and different every time.  
-- No “fixed winning strategy” – decisions depend on random shop offers, wear escalation, and market swings.  
+- Minimal, abstract interface resembling a machine control panel.
+- Each bay represented as a **tile** showing live metrics and upgrade states.
+- The machine visibly **grows** as modules activate.
+- Visual and audio feedback communicate system stress (tick pulse, alerts, color shifts).
+- Designed for clarity under pressure, adaptable to both mobile and desktop.
+- Style: sleek, high-tech, industrial — no decorative illustrations.
 
 ---
 
 ## 📌 Roadmap
 
-- [ ] Basic UI (HUD, machine, shop, actions)  
-- [ ] Core state engine (energy, money, wear, price)  
-- [ ] Random shop logic (fair slots)  
-- [ ] Module design & upgrades  
-- [ ] Event system (e.g. emergency battery, energy crisis)  
-- [ ] Balancing & test runs  
+- [ ] Core state engine (energy, money, wear, tick)
+- [ ] Bay system (activation, upgrades, interactions)
+- [ ] Event & market system
+- [ ] UI prototype (modular tiles, HUD, live feedback)
+- [ ] Balancing iterations & test runs
 
 ---
 
