@@ -1,7 +1,7 @@
 {
-    "short_name": "--yourSiteName--",
-    "name": "--yourSiteName--",
-    "description": "--your description--",
+    "short_name": "machine",
+    "name": "the machine",
+    "description": "An experimental real-time survival and engine-building game where you manage a single abstract machine that produces money, consumes energy, and slowly wears down over time.",
     "icons": [
         {
             "src": "icons/favicon.svg",
