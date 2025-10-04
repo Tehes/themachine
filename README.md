@@ -120,8 +120,12 @@ Events are rare but impactful — designed to disrupt routines and force adaptiv
 ## 🎨 Interface & Experience
 
 - Minimal, abstract interface resembling a machine control panel.
-- Each bay represented as a **tile** showing live metrics and upgrade states.
-- The machine visibly **grows** as modules activate.
+- Each element of the machine — from stats to modules — appears as a **Bento card** within a unified
+  grid.
+- The entire layout acts as a single, dynamic dashboard where every tile represents part of the
+  machine’s system.
+- Tiles can vary in size and purpose, depending on the information or interaction they represent.
+- As the machine evolves, new tiles activate and fill the grid, making progress visually tangible.
 - Visual and audio feedback communicate system stress (tick pulse, alerts, color shifts).
 - Designed for clarity under pressure, adaptable to both mobile and desktop.
 - Style: sleek, high-tech, industrial — no decorative illustrations.
