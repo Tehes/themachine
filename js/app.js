@@ -5,10 +5,60 @@ Imports
 /* --------------------------------------------------------------------------------------------------
 Variables
 ---------------------------------------------------------------------------------------------------*/
+let tickInterval = 2000; // 2 seconds per tick
+let tickCount = 0;
+let running = false;
+let energy = 1;
+let wear = 0;
+
+const energyFill = document.querySelector(".tile.energy .fill");
+const energyVal = document.querySelector("[data-energy]");
+const wearFill = document.querySelector(".tile.wear .fill");
+const wearVal = document.querySelector("[data-wear]");
 
 /* --------------------------------------------------------------------------------------------------
 functions
 ---------------------------------------------------------------------------------------------------*/
+
+function startTicks() {
+	if (running) return;
+	running = true;
+	console.log("Tick system started");
+	tick();
+}
+
+function stopTicks() {
+	running = false;
+	console.log("Tick system stopped");
+}
+
+function tick() {
+	if (!running) return;
+
+	tickCount++;
+	console.log(`Tick ${tickCount}`);
+
+	if (energyFill && wearFill) {
+		energy = Math.max(0, Math.round((energy - 0.1) * 1000) / 1000);
+		wear = Math.min(1, Math.round((wear + 0.02) * 1000) / 1000);
+
+		// reflect to DOM (fill + numbers)
+		energyFill.style.setProperty("--p", energy);
+		wearFill.style.setProperty("--p", wear);
+
+		if (energyVal) energyVal.textContent = Math.round(energy * 10);
+		if (wearVal) wearVal.textContent = Math.round(wear * 100);
+	}
+
+	// stop when energy = 0 or wear = 100%
+	if (energy <= 0 || wear >= 1) {
+		stopTicks();
+		return;
+	}
+
+	// schedule next tick only if still running
+	if (running) setTimeout(tick, tickInterval);
+}
 
 function init() {
 	// The following touchstart event listener was used as a workaround for older iOS devices
@@ -16,6 +66,8 @@ function init() {
 	// on modern devices and browsers, especially in Progressive Web Apps.
 	// If you experience issues with touch interactions, you can uncomment it again.
 	// document.addEventListener("touchstart", function() {}, false);
+
+	startTicks();
 }
 
 /* --------------------------------------------------------------------------------------------------
