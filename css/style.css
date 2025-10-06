@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap');
-@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&icon_names=bolt,timelapse");
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&icon_names=bolt,timelapse,token");
 
 :root {
     /* system font stack with Roboto Condensed as primary */
@@ -8,6 +8,7 @@
 
     color-scheme: dark;
     --hue: 220;
+    --tick-duration: 6s;
     /* calm blue base, can turn red, when engine gets damaged */
     --bg-color: hsl(var(--hue) 30% 15%);
     --font-color: hsl(var(--hue), 20%, 85%);
@@ -57,8 +58,8 @@ samp {
 }
 
 .icon {
-  font-family: 'Material Symbols Outlined';
-  vertical-align: bottom;
+    font-family: 'Material Symbols Outlined';
+    vertical-align: bottom;
 }
 
 html {
@@ -93,7 +94,7 @@ body {
             hsl(var(--hue) 35% 25%) 0%,
             hsl(var(--hue) 30% 20%) 50%,
             hsl(var(--hue) 30% 15%) 100%);
-    animation: spinGradient 10s linear infinite;
+    animation: spinGradient var(--tick-duration) linear infinite;
     /* Disables selecting text (useful for PWAs to prevent unwanted text selection during interactions) */
     /* user-select: none;
     -webkit-user-select: none; */

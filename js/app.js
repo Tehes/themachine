@@ -5,7 +5,8 @@ Imports
 /* --------------------------------------------------------------------------------------------------
 Variables
 ---------------------------------------------------------------------------------------------------*/
-let tickInterval = 6000; // seconds per tick
+let tickInterval = 6000; // milliseconds per tick
+let activeTickInterval = tickInterval;
 let tickCount = 0;
 let tickStartTs = 0;
 let animationId = 0;
@@ -17,6 +18,12 @@ const energyState = {
 	current: 10, // units
 	capacity: 10, // units (max)
 	consPerTick: 1, // units per tick
+};
+
+const outputState = {
+	current: 0, // tokens
+	capacity: 10, // max tokens
+	prodPerTick: 2, // tokens per tick
 };
 
 let wear = 0; // 0..1
@@ -36,6 +43,13 @@ const wearEls = {
 	cons: document.querySelector(".tile.wear .consumption [data-consumption]"),
 };
 
+const outputEls = {
+	fill: document.querySelector(".tile.output .fill"),
+	val: document.querySelector(".tile.output [data-output]"),
+	cap: document.querySelector(".tile.output [data-output-capacity]"),
+	prod: document.querySelector(".tile.output .consumption [data-production]"),
+};
+
 const tickEls = {
 	dial: document.querySelector(".tile.tick .dial"),
 	count: document.querySelector(".tile.tick [data-tick-count]"),
@@ -49,6 +63,11 @@ function clamp01(x) {
 	return Math.max(0, Math.min(1, x));
 }
 
+function fmt2(n) {
+	const s = n.toFixed(2);
+	return s.replace(/\.00$/, "").replace(/(\.\d)0$/, "$1");
+}
+
 function renderEnergy() {
 	const { current, capacity, consPerTick } = energyState;
 	const p = capacity > 0 ? clamp01(current / capacity) : 0;
@@ -60,12 +79,26 @@ function renderEnergy() {
 
 function renderWear() {
 	if (wearEls.fill) wearEls.fill.style.setProperty("--p", wear);
-	if (wearEls.val) wearEls.val.textContent = Math.round(wear * 100);
-	if (wearEls.cons) wearEls.cons.textContent = Math.round(WEAR_DELTA * 100);
+	if (wearEls.val) wearEls.val.textContent = (wear * 100).toFixed(1);
+	if (wearEls.cons) wearEls.cons.textContent = (WEAR_DELTA * 100).toFixed(1);
+}
+
+function renderOutput() {
+	const { current, capacity, prodPerTick } = outputState;
+	const p = capacity > 0 ? clamp01(current / capacity) : 0;
+	if (outputEls.fill) outputEls.fill.style.setProperty("--p", p);
+	if (outputEls.val) outputEls.val.textContent = fmt2(current);
+	if (outputEls.cap) outputEls.cap.textContent = capacity;
+	// Show effective production (reduced by wear)
+	const effProd = Math.max(0, prodPerTick * (1 - wear));
+	if (outputEls.prod) outputEls.prod.textContent = effProd.toFixed(2);
 }
 
 function renderTickStatic() {
-	if (tickEls.duration) tickEls.duration.textContent = (tickInterval / 1000).toString();
+	if (tickEls.duration) {
+		tickEls.duration.textContent = (activeTickInterval / 1000).toString();
+	}
+	document.documentElement.style.setProperty("--tick-duration", `${activeTickInterval}ms`);
 	if (tickEls.count) tickEls.count.textContent = tickCount;
 	if (tickEls.dial) tickEls.dial.style.setProperty("--p", 1);
 }
@@ -74,16 +107,27 @@ function animateTick(ts) {
 	if (!running) return;
 	if (!tickStartTs) tickStartTs = ts;
 	const elapsed = ts - tickStartTs;
-	const p = Math.max(0, Math.min(1, 1 - (elapsed / tickInterval))); // run downwards: 1 → 0
+	const p = Math.max(0, Math.min(1, 1 - (elapsed / activeTickInterval))); // run downwards: 1 → 0
 	if (tickEls.dial) tickEls.dial.style.setProperty("--p", p);
 	animationId = requestAnimationFrame(animateTick);
 }
 
 function applyTick() {
+	// Produce tokens up to capacity (reduced by wear)
+	const eff = Math.max(0, 1 - wear);
+	const produced = Math.max(0, outputState.prodPerTick * eff);
+	outputState.current = Math.min(
+		outputState.capacity,
+		outputState.current + produced,
+	);
+	// Snap to exact cap if very close to avoid FP noise in UI
+	if (Math.abs(outputState.capacity - outputState.current) < 1e-9) {
+		outputState.current = outputState.capacity;
+	}
 	// Energy drains by integer units per tick
 	energyState.current = Math.max(0, energyState.current - energyState.consPerTick);
 	// Wear increases by percentage per tick
-	wear = clamp01(Math.round((wear + WEAR_DELTA) * 1000) / 1000);
+	wear = clamp01(wear + WEAR_DELTA);
 }
 
 function startTicks() {
@@ -92,7 +136,7 @@ function startTicks() {
 	console.log("Tick system started");
 	// prepare dial & start animation
 	tickStartTs = performance.now();
-	renderTickStatic();
+	activeTickInterval = tickInterval;
 	animationId = requestAnimationFrame(animateTick);
 	tick();
 }
@@ -112,11 +156,15 @@ function tick() {
 	if (tickEls.count) tickEls.count.textContent = tickCount;
 	// reset dial sweep for next cycle
 	tickStartTs = performance.now();
+	// latch the duration for this new cycle so mid-tick changes only apply next time
+	activeTickInterval = tickInterval;
 	if (tickEls.dial) tickEls.dial.style.setProperty("--p", 1);
 
 	applyTick();
+	renderTickStatic();
 	renderEnergy();
 	renderWear();
+	renderOutput();
 
 	// stop when energy empty or wear full
 	if (energyState.current <= 0 || wear >= 1) {
@@ -136,6 +184,7 @@ function init() {
 
 	renderEnergy();
 	renderWear();
+	renderOutput();
 	renderTickStatic();
 	startTicks();
 }
@@ -159,6 +208,28 @@ function setEnergyConsumption(unitsPerTick) {
 	renderEnergy();
 }
 
+function setTickInterval(ms) {
+	ms = Math.max(0, Math.floor(ms));
+	tickInterval = ms;
+}
+
+function setOutputCapacity(n) {
+	n = Math.max(0, Math.floor(n));
+	outputState.capacity = n;
+	outputState.current = Math.min(outputState.current, n);
+	renderOutput();
+}
+function setOutputFill(n) {
+	n = Math.max(0, Math.min(Math.floor(n), outputState.capacity));
+	outputState.current = n;
+	renderOutput();
+}
+function setOutputProduction(perTick) {
+	perTick = Math.max(0, Math.floor(perTick));
+	outputState.prodPerTick = perTick;
+	renderOutput();
+}
+
 /* --------------------------------------------------------------------------------------------------
 public members, exposed with return statement
 ---------------------------------------------------------------------------------------------------*/
@@ -167,6 +238,10 @@ globalThis.machine = {
 	setEnergyCapacity,
 	setEnergyFill,
 	setEnergyConsumption,
+	setTickInterval,
+	setOutputCapacity,
+	setOutputFill,
+	setOutputProduction,
 };
 
 globalThis.machine.init();

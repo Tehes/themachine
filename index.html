@@ -31,15 +31,14 @@
 			</div>
 			<div class="numbers">
 				<span class="pair">
-					<span data-energy>10</span>/<span data-capacity>10</span><span class="unit"><span class="icon">bolt</span></span>
+					<span data-energy>10</span>/<span data-capacity>10</span><span class="unit"><span
+							class="icon">bolt</span></span>
 				</span>
 				<span class="consumption">
-					-<span data-consumption>1</span><span class="unit"><span class="icon">bolt</span>/<span class="icon">timelapse</span></span>
+					-<span data-consumption>1</span><span class="unit"><span class="icon">bolt</span>/<span
+							class="icon">timelapse</span></span>
 				</span>
 			</div>
-		</section>
-		<section class="tile" data-w="2" data-h="4">
-			<h3></h3>
 		</section>
 		<section class="tile wear" data-role="wear" data-w="2" data-h="2">
 			<h3>Wear</h3>
@@ -53,9 +52,6 @@
 				</span>
 			</div>
 		</section>
-		<section class="tile" data-w="4" data-h="2">
-			<h3></h3>
-		</section>
 		<section class="tile tick" data-role="tick" data-w="2" data-h="2">
 			<h3>Tick</h3>
 			<div class="dial" style="--p: 1">
@@ -63,23 +59,24 @@
 			</div>
 			<div class="numbers">
 				<span class="pair">#<span data-tick-count>0</span><span class="unit"></span></span>
-				<span class="duration"><span data-tick-duration>2</span><span class="unit">s/<span class="icon">timelapse</span></span></span>
+				<span class="duration"><span data-tick-duration>2</span><span class="unit">s/<span
+							class="icon">timelapse</span></span></span>
 			</div>
 		</section>
-		<section class="tile" data-w="4" data-h="4">
-			<h3></h3>
-		</section>
-		<section class="tile" data-w="2" data-h="2">
-			<h3></h3>
-		</section>
-		<section class="tile" data-w="4" data-h="2">
-			<h3></h3>
-		</section>
-		<section class="tile" data-w="4" data-h="2">
-			<h3></h3>
-		</section>
-		<section class="tile" data-w="4" data-h="2">
-			<h3></h3>
+		<section class="tile output" data-role="output" data-w="4" data-h="2">
+			<h3>Output</h3>
+			<div class="meter">
+				<div class="fill" style="--p: 0;"></div>
+			</div>
+			<div class="numbers">
+				<span class="pair"><span data-output>0</span>/<span data-output-capacity>10</span><span
+						class="unit"><span class="icon">token</span></span>
+				</span>
+				<span class="consumption">
+					+<span data-production>2</span><span class="unit"><span class="icon">token</span>/<span
+							class="icon">timelapse</span></span>
+				</span>
+			</div>
 		</section>
 	</main>
 	<script type="module" src="./js/app.js"></script>
