@@ -10,9 +10,9 @@ The goal: survive as long as possible before the system collapses.
 
 ## ⚠️ Status
 
-This project is **under development**.\
-It is currently a design prototype — not yet a finished, playable game.\
-This README describes the concept and planned features.
+This project is **in active prototype phase**.  
+Core systems (energy, wear, and tick cycle) are implemented and running.  
+UI layout and live updates are functional, but modules, economy, and event logic are still in design.
 
 ---
 
@@ -130,15 +130,19 @@ Events are rare but impactful — designed to disrupt routines and force adaptiv
 - Designed for clarity under pressure, adaptable to both mobile and desktop.
 - Style: sleek, high-tech, industrial — no decorative illustrations.
 
+
 ---
 
 ## 📌 Roadmap
 
-- [ ] Core state engine (energy, money, wear, tick)
+- [x] Core state engine (energy, wear, tick)
+- [ ] Money system (income, purchases)
 - [ ] Bay system (activation, upgrades, interactions)
 - [ ] Event & market system
-- [ ] UI prototype (modular tiles, HUD, live feedback)
-- [ ] Balancing iterations & test runs
+- [x] UI prototype (modular tiles, HUD, live feedback)
+- [ ] Visual feedback: alerts, color shifts, animations
+- [ ] Balancing iterations & playtest loops
+
 
 ---
 
