@@ -138,7 +138,7 @@ function startTicks() {
 	tickStartTs = performance.now();
 	activeTickInterval = tickInterval;
 	animationId = requestAnimationFrame(animateTick);
-	tick();
+	setTimeout(tick, tickInterval);
 }
 
 function stopTicks() {
