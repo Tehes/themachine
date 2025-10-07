@@ -173,7 +173,6 @@ BENTO GRID
 -------------------------------------------------------------------
 */
 
-/* Grid canvas lives directly on <main> */
 main {
     --cols: 12;
     --gap: 12px;
@@ -368,6 +367,30 @@ METER COMPONENT (generic)
         0 0 calc(12px * var(--lo)) hsl(0 80% 60% / var(--lo));
 }
 
+/*
+-------------------------------------------------------------------
+DIAL COMPONENT (generic)
+-------------------------------------------------------------------
+*/
+
+.dial {
+    --p: 0;
+    /* 0..1 progress */
+    --angle: calc(var(--p) * 360deg);
+    --size: 90px;
+    --thick: 0px;
+    --track: hsla(0, 0%, 100%, 0.1);
+    --progress: hsl(calc(120deg * var(--p)), 85%, 50%);
+
+    inline-size: var(--size);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: conic-gradient(var(--progress) 0deg var(--angle), var(--track) var(--angle) 360deg);
+    mask: radial-gradient(farthest-side, transparent calc(50% - var(--thick)), #000 calc(50% - var(--thick)) 50%);
+    box-shadow: inset 0 0 0 1px hsla(0, 0%, 80%, 0.4);
+    margin-inline: auto;
+}
+
 
 /*
 -------------------------------------------------------------------
@@ -406,30 +429,6 @@ WEAR TILE
 
 /*
 -------------------------------------------------------------------
-DIAL COMPONENT (generic)
--------------------------------------------------------------------
-*/
-
-.dial {
-    --p: 0;
-    /* 0..1 progress */
-    --angle: calc(var(--p) * 360deg);
-    --size: 90px;
-    --thick: 0px;
-    --track: hsla(0, 0%, 100%, 0.1);
-    --progress: hsl(calc(120deg * var(--p)), 85%, 50%);
-
-    inline-size: var(--size);
-    aspect-ratio: 1;
-    border-radius: 50%;
-    background: conic-gradient(var(--progress) 0deg var(--angle), var(--track) var(--angle) 360deg);
-    mask: radial-gradient(farthest-side, transparent calc(50% - var(--thick)), #000 calc(50% - var(--thick)) 50%);
-    box-shadow: inset 0 0 0 1px hsla(0, 0%, 80%, 0.4);
-    margin-inline: auto;
-}
-
-/*
--------------------------------------------------------------------
 TICK TILE
 -------------------------------------------------------------------
 */
@@ -438,4 +437,14 @@ TICK TILE
 .tile.tick .dial {
     --size: 90px;
     --thick: 0px;
+}
+
+/*
+-------------------------------------------------------------------
+OUTPUT TILE
+-------------------------------------------------------------------
+*/
+
+.tile.output .fill {
+    --q: 0.5; /* static color (yellow), does not react to --p */
 }
