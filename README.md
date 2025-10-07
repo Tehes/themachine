@@ -2,7 +2,7 @@
 
 **The Machine** is an experimental, real-time survival simulation and engine-building game,
 developed as a Progressive Web App (PWA).\
-The player manages a single abstract machine that continuously produces money, consumes energy, and
+The player manages a single abstract machine that continuously produces tokens, consumes energy, and
 inevitably wears down over time.\
 The goal: survive as long as possible before the system collapses.
 
@@ -13,6 +13,18 @@ The goal: survive as long as possible before the system collapses.
 This project is **in active prototype phase**.  
 Core systems (energy, wear, and tick cycle) are implemented and running.  
 UI layout and live updates are functional, but modules, economy, and event logic are still in design.
+
+---
+
+## 🧰 Current Prototype Features
+
+- Real-time tick cycle with live updates
+- Dynamic **energy**, **output**, and **wear** meters
+- Interactive **action buttons**:
+  - **Buy Energy** (costs tokens, refills energy)
+  - **Repair Wear** (costs tokens, reduces wear)
+- Automatic enable/disable logic based on current state
+- Visual icons via Material Symbols for consistent UI
 
 ---
 
@@ -32,7 +44,7 @@ The machine runs in continuous **ticks** — short real-time intervals that repr
 
 Each tick:
 
-- Produces money (`+💰`)
+- Produces tokens (`+🪙`)
 - Consumes energy (`−⚡`)
 - Increases wear (`+💥`)
 
@@ -47,7 +59,7 @@ When energy reaches **0** or damage hits **100%**, the machine fails.
 All key systems are connected through one feedback triangle:
 
 ```
-Money ↑ → Energy ↓ → Wear ↑
+Tokens ↑ → Energy ↓ → Wear ↑
      ↖---------------↙
 ```
 
@@ -133,13 +145,22 @@ Events are rare but impactful — designed to disrupt routines and force adaptiv
 
 ---
 
+## 🎮 Controls
+
+- **Buy Energy** → increases ⚡ energy by amount shown on the button.  
+- **Repair Wear** → reduces wear by the shown percentage.  
+- Buttons disable automatically when insufficient tokens or caps reached.
+
+---
+
 ## 📌 Roadmap
 
+- [x] UI prototype (modular tiles, HUD, live feedback)
 - [x] Core state engine (energy, wear, tick)
+- [x] Interactive action system (buttons, costs, enable/disable logic)
 - [ ] Money system (income, purchases)
 - [ ] Bay system (activation, upgrades, interactions)
 - [ ] Event & market system
-- [x] UI prototype (modular tiles, HUD, live feedback)
 - [ ] Visual feedback: alerts, color shifts, animations
 - [ ] Balancing iterations & playtest loops
 

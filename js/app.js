@@ -56,6 +56,13 @@ const tickEls = {
 	duration: document.querySelector(".tile.tick [data-tick-duration]"),
 };
 
+const buttons = Array.from(document.querySelectorAll(".actions .btn"));
+
+const UNIT_TPL = {
+	"bolt": '<span class="icon">bolt</span>',
+	"token": '<span class="icon">token</span>',
+};
+
 /* --------------------------------------------------------------------------------------------------
 functions
 ---------------------------------------------------------------------------------------------------*/
@@ -92,6 +99,27 @@ function renderOutput() {
 	// Show effective production (reduced by wear)
 	const effProd = Math.max(0, prodPerTick * (1 - wear));
 	if (outputEls.prod) outputEls.prod.textContent = effProd.toFixed(2);
+}
+
+function renderButtons() {
+	for (const btn of buttons) {
+		const amountEl = btn.querySelector(".amount");
+		const unitEl = btn.querySelector(".unit");
+		const costEl = btn.querySelector(".cost-val");
+
+		if (amountEl) amountEl.textContent = btn.dataset.amount || "";
+
+		if (unitEl) {
+			const key = btn.dataset.unit || "";
+			if (UNIT_TPL[key] !== undefined) {
+				unitEl.innerHTML = UNIT_TPL[key];
+			} else {
+				unitEl.textContent = key;
+			}
+		}
+
+		if (costEl) costEl.textContent = btn.dataset.cost || "";
+	}
 }
 
 function renderTickStatic() {
@@ -165,6 +193,8 @@ function tick() {
 	renderEnergy();
 	renderWear();
 	renderOutput();
+	renderButtons();
+	refreshButtons(); 
 
 	// stop when energy empty or wear full
 	if (energyState.current <= 0 || wear >= 1) {
@@ -173,6 +203,65 @@ function tick() {
 	}
 
 	if (running) setTimeout(tick, tickInterval);
+}
+
+function refreshButtons() {
+	for (const btn of buttons) {
+		const action = btn.dataset.action;
+		const cost = Number(btn.dataset.cost ?? btn.querySelector(".cost-val")?.textContent ?? 0);
+		const amount = Number(btn.dataset.amount ?? btn.querySelector(".amount")?.textContent ?? 0);
+
+		let enabled = false;
+
+		switch (action) {
+			case "buy-energy": {
+				enabled = outputState.current >= cost && // genug Tokens
+					energyState.current < energyState.capacity && // nicht voll
+					amount > 0;
+				break;
+			}
+			case "repair-wear": {
+				enabled = outputState.current >= cost && // genug Tokens
+					wear > 0 && // es gibt was zu reparieren
+					amount > 0; // >0%
+				break;
+			}
+			default:
+				enabled = false;
+		}
+
+		btn.disabled = !enabled;
+	}
+}
+
+function executeAction(btn) {
+	const action = btn.dataset.action;
+	const cost = Number(btn.dataset.cost ?? 0);
+	const amount = Number(btn.dataset.amount ?? 0);
+
+	if (btn.disabled) return;
+	if (outputState.current < cost) return; // doppelte Absicherung
+
+	switch (action) {
+		case "buy-energy": {
+			outputState.current = Math.max(0, outputState.current - cost);
+			energyState.current = Math.min(energyState.capacity, energyState.current + amount);
+			renderEnergy();
+			renderOutput();
+			break;
+		}
+		case "repair-wear": {
+			outputState.current = Math.max(0, outputState.current - cost);
+			wear = clamp01(wear - amount / 100); // amount ist Prozent
+			renderWear();
+			renderOutput();
+			break;
+		}
+		default:
+			console.warn("Unhandled action:", action);
+	}
+
+	refreshButtons();
 }
 
 function init() {
@@ -187,6 +276,14 @@ function init() {
 	renderOutput();
 	renderTickStatic();
 	startTicks();
+	renderButtons();
+	refreshButtons(); 
+
+	document.addEventListener("click", (ev) => {
+		const btn = ev.target.closest(".actions .btn[data-action]");
+		if (!btn) return;
+		executeAction(btn);
+	});
 }
 
 function setEnergyCapacity(n) {

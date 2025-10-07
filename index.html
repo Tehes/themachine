@@ -39,6 +39,20 @@
 							class="icon">timelapse</span></span>
 				</span>
 			</div>
+			<div class="actions">
+				<button class="btn buy" data-action="buy-energy" data-cost="3" data-amount="5"
+					data-unit="bolt">
+					<span class="label">
+						<span>Buy </span>
+						<span class="amount"></span><span class="unit"></span>
+					</span>
+					<span class="cost">
+						<span class="cost-val"></span><span class="icon">token</span>
+					</span>
+				</button>
+
+			</div>
+			</div>
 		</section>
 		<section class="tile wear" data-role="wear" data-w="2" data-h="2">
 			<h3>Wear</h3>
@@ -50,6 +64,17 @@
 				<span class="consumption">
 					+<span data-consumption></span><span class="unit">%/<span class="icon">timelapse</span></span>
 				</span>
+			</div>
+			<div class="actions">
+				<button class="btn repair" data-action="repair-wear" data-cost="5" data-amount="10" data-unit="%">
+					<span class="label">
+						<span>Repair </span>
+						<span class="amount"></span><span class="unit"></span>
+					</span>
+					<span class="cost">
+						<span class="cost-val"></span><span class="icon">token</span>
+					</span>
+				</button>
 			</div>
 		</section>
 		<section class="tile tick" data-role="tick" data-w="2" data-h="2">
@@ -64,7 +89,7 @@
 			</div>
 		</section>
 		<section class="tile output" data-role="output" data-w="4" data-h="2">
-			<h3>Output</h3>
+			<h3>Token Output</h3>
 			<div class="meter">
 				<div class="fill" style="--p: 0;"></div>
 			</div>
