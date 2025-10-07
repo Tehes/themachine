@@ -63,13 +63,12 @@ Tokens ↑ → Energy ↓ → Wear ↑
      ↖---------------↙
 ```
 
-- **Money** funds upgrades and repairs, but upgrades increase consumption.
+- **Tokens** funds upgrades and repairs, but upgrades increase consumption.
 - **Energy** keeps the system alive but drains constantly.
 - **Wear** rises each tick — faster when the machine runs hot.
 - **Tick speed** accelerates over time, intensifying the cycle.
 
-Balancing these three axes is the heart of survival: every optimization pushes another part closer
-to collapse.
+Balancing these three axes is the heart of survival: every optimization pushes another part closer to collapse.
 
 ---
 
@@ -97,11 +96,18 @@ All bays exist from the start — but most are inactive until the player install
 
 ## 💥 Wear & Repairs
 
-- **Wear** increases each tick, based on tick speed and system stress.
-- Each installed module adds to wear in unique proportions.
-- **Cooling** and **Durability** modules mitigate wear buildup.
-- **Repairs** reduce accumulated damage but cost money — they buy time, not safety.
-- Over time, wear accelerates faster than repairs can offset it.
+**Wear** increases each tick, scaling dynamically with time survived.  
+As the machine ages, each cycle adds slightly more damage than the last — creating inevitable decay.
+
+Each installed module contributes to wear in unique proportions.  
+**Cooling** and **Durability** modules mitigate this buildup and can delay system collapse.
+
+**Repairs** reduce accumulated damage but cost money — they buy time, not safety.  
+Repairs become more frequent and expensive the longer the machine runs.
+
+**Overflow penalty:** if token storage reaches capacity, the system overheats,  
+immediately adding a bonus wear of **+5 %** that tick.  
+This encourages spending or upgrading before hitting maximum output.
 
 ---
 
@@ -119,13 +125,17 @@ Events are rare but impactful — designed to disrupt routines and force adaptiv
 
 ## 🧮 Balancing (initial draft values)
 
-- Start money: **5**
-- Base production: **+1💰/tick**
-- Base consumption: **−1⚡/tick**
-- Battery capacity: **10⚡**
-- Starting damage: **0%**
-- Energy price: **1.20💰/⚡**, increases by ~**1.5% per tick** (light fluctuation)
-- Starting tick duration: **10 seconds** (accelerates over time)
+- Base production: **+2 🪙/tick** (reduced slightly as wear increases)
+- Base consumption: **−1 ⚡/tick**
+- Base wear rate: **+2 %/tick**, increases gradually with time survived  
+  `wearDelta = 0.02 + (tickCount / 10000)`
+- Overflow penalty: **+5 % wear** when output storage is full  
+- Energy capacity: **10 ⚡**
+- Starting wear: **0 %**
+- Energy price: **3 🪙 for +5 ⚡**
+- Repair cost: **5 🪙 for −10 % wear**
+- Tick duration: **6 s**
+
 
 ---
 
@@ -158,7 +168,7 @@ Events are rare but impactful — designed to disrupt routines and force adaptiv
 - [x] UI prototype (modular tiles, HUD, live feedback)
 - [x] Core state engine (energy, wear, tick)
 - [x] Interactive action system (buttons, costs, enable/disable logic)
-- [ ] Money system (income, purchases)
+- [ ] Token system (income, purchases)
 - [ ] Bay system (activation, upgrades, interactions)
 - [ ] Event & market system
 - [ ] Visual feedback: alerts, color shifts, animations

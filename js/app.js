@@ -27,7 +27,9 @@ const outputState = {
 };
 
 let wear = 0; // 0..1
-const WEAR_DELTA = 0.02;
+let wearDelta = 0.02;
+const OVERFLOW_WEAR_PENALTY = 0.05;
+let overflowAppliedThisTick = false;
 
 // --- DOM refs ---
 const energyEls = {
@@ -87,7 +89,7 @@ function renderEnergy() {
 function renderWear() {
 	if (wearEls.fill) wearEls.fill.style.setProperty("--p", wear);
 	if (wearEls.val) wearEls.val.textContent = (wear * 100).toFixed(1);
-	if (wearEls.cons) wearEls.cons.textContent = (WEAR_DELTA * 100).toFixed(1);
+	if (wearEls.cons) wearEls.cons.textContent = (wearDelta * 100).toFixed(2);
 }
 
 function renderOutput() {
@@ -144,18 +146,31 @@ function applyTick() {
 	// Produce tokens up to capacity (reduced by wear)
 	const eff = Math.max(0, 1 - wear);
 	const produced = Math.max(0, outputState.prodPerTick * eff);
+
+	const prevOutput = outputState.current;
 	outputState.current = Math.min(
 		outputState.capacity,
 		outputState.current + produced,
 	);
+
 	// Snap to exact cap if very close to avoid FP noise in UI
 	if (Math.abs(outputState.capacity - outputState.current) < 1e-9) {
 		outputState.current = outputState.capacity;
 	}
+
 	// Energy drains by integer units per tick
 	energyState.current = Math.max(0, energyState.current - energyState.consPerTick);
-	// Wear increases by percentage per tick
-	wear = clamp01(wear + WEAR_DELTA);
+
+	// Wear increases
+	wearDelta = 0.02 + (tickCount / 10000);
+    wear = clamp01(wear + wearDelta);
+
+	// Extra wear if output was capped this tick
+	overflowAppliedThisTick = prevOutput < outputState.capacity &&
+		outputState.current === outputState.capacity;
+	if (overflowAppliedThisTick) {
+		wear = clamp01(wear + OVERFLOW_WEAR_PENALTY);
+	}
 }
 
 function startTicks() {
@@ -194,7 +209,7 @@ function tick() {
 	renderWear();
 	renderOutput();
 	renderButtons();
-	refreshButtons(); 
+	refreshButtons();
 
 	// stop when energy empty or wear full
 	if (energyState.current <= 0 || wear >= 1) {
@@ -277,7 +292,7 @@ function init() {
 	renderTickStatic();
 	startTicks();
 	renderButtons();
-	refreshButtons(); 
+	refreshButtons();
 
 	document.addEventListener("click", (ev) => {
 		const btn = ev.target.closest(".actions .btn[data-action]");
