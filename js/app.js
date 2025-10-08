@@ -26,10 +26,9 @@ const outputState = {
 	prodPerTick: 2, // tokens per tick
 };
 
-let wear = 0; // 0..1
-let wearDelta = 0.02;
-const OVERFLOW_WEAR_PENALTY = 0.05;
-let overflowAppliedThisTick = false;
+let wear = 0;
+const wearPerTick = 0.02; // configurable wear growth per tick (fraction of 1.0)
+const energyCostGrowth = 0.02; // units added to consPerTick each tick
 
 // --- DOM refs ---
 const energyEls = {
@@ -81,9 +80,9 @@ function renderEnergy() {
 	const { current, capacity, consPerTick } = energyState;
 	const p = capacity > 0 ? clamp01(current / capacity) : 0;
 	if (energyEls.fill) energyEls.fill.style.setProperty("--p", p);
-	if (energyEls.val) energyEls.val.textContent = current;
+	if (energyEls.val) energyEls.val.textContent = fmt2(current);
 	if (energyEls.cap) energyEls.cap.textContent = capacity;
-	if (energyEls.cons) energyEls.cons.textContent = consPerTick;
+	if (energyEls.cons) energyEls.cons.textContent = fmt2(consPerTick);
 }
 
 function renderWear() {
@@ -98,9 +97,8 @@ function renderOutput() {
 	if (outputEls.fill) outputEls.fill.style.setProperty("--p", p);
 	if (outputEls.val) outputEls.val.textContent = fmt2(current);
 	if (outputEls.cap) outputEls.cap.textContent = capacity;
-	// Show effective production (reduced by wear)
-	const effProd = Math.max(0, prodPerTick * (1 - wear));
-	if (outputEls.prod) outputEls.prod.textContent = effProd.toFixed(2);
+	// Show raw production (no reduction by wear)
+	if (outputEls.prod) outputEls.prod.textContent = prodPerTick.toFixed(2);
 }
 
 function renderButtons() {
@@ -143,11 +141,9 @@ function animateTick(ts) {
 }
 
 function applyTick() {
-	// Produce tokens up to capacity (reduced by wear)
-	const eff = Math.max(0, 1 - wear);
-	const produced = Math.max(0, outputState.prodPerTick * eff);
+	// Produce tokens up to capacity
+	const produced = outputState.prodPerTick;
 
-	const prevOutput = outputState.current;
 	outputState.current = Math.min(
 		outputState.capacity,
 		outputState.current + produced,
@@ -158,19 +154,14 @@ function applyTick() {
 		outputState.current = outputState.capacity;
 	}
 
+	// Increase energy consumption per tick
+	energyState.consPerTick += energyCostGrowth;
+
 	// Energy drains by integer units per tick
 	energyState.current = Math.max(0, energyState.current - energyState.consPerTick);
 
 	// Wear increases
-	wearDelta = 0.02 + (tickCount / 10000);
-    wear = clamp01(wear + wearDelta);
-
-	// Extra wear if output was capped this tick
-	overflowAppliedThisTick = prevOutput < outputState.capacity &&
-		outputState.current === outputState.capacity;
-	if (overflowAppliedThisTick) {
-		wear = clamp01(wear + OVERFLOW_WEAR_PENALTY);
-	}
+	wear = clamp01(wear + wearPerTick);
 }
 
 function startTicks() {
@@ -230,14 +221,14 @@ function refreshButtons() {
 
 		switch (action) {
 			case "buy-energy": {
-				enabled = outputState.current >= cost && // genug Tokens
-					energyState.current < energyState.capacity && // nicht voll
+				enabled = outputState.current >= cost && // enough Tokens
+					energyState.current < energyState.capacity && // not full
 					amount > 0;
 				break;
 			}
 			case "repair-wear": {
-				enabled = outputState.current >= cost && // genug Tokens
-					wear > 0 && // es gibt was zu reparieren
+				enabled = outputState.current >= cost && // enough Tokens
+					wear > 0 && // need repair
 					amount > 0; // >0%
 				break;
 			}
@@ -255,7 +246,7 @@ function executeAction(btn) {
 	const amount = Number(btn.dataset.amount ?? 0);
 
 	if (btn.disabled) return;
-	if (outputState.current < cost) return; // doppelte Absicherung
+	if (outputState.current < cost) return; // sanity check
 
 	switch (action) {
 		case "buy-energy": {
@@ -267,7 +258,7 @@ function executeAction(btn) {
 		}
 		case "repair-wear": {
 			outputState.current = Math.max(0, outputState.current - cost);
-			wear = clamp01(wear - amount / 100); // amount ist Prozent
+			wear = clamp01(wear - amount / 100); // amount is given in percent
 			renderWear();
 			renderOutput();
 			break;
@@ -315,7 +306,7 @@ function setEnergyFill(n) {
 }
 
 function setEnergyConsumption(unitsPerTick) {
-	unitsPerTick = Math.max(0, Math.floor(unitsPerTick));
+	unitsPerTick = Math.max(0, unitsPerTick);
 	energyState.consPerTick = unitsPerTick;
 	renderEnergy();
 }

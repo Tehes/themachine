@@ -1,28 +1,29 @@
 # The Machine
 
-**The Machine** is an experimental, real-time survival simulation and engine-building game,
+**The Machine** is an experimental, real-time survival simulation and engine-building game,\
 developed as a Progressive Web App (PWA).\
-The player manages a single abstract machine that continuously produces tokens, consumes energy, and
-inevitably wears down over time.\
+The player manages a single abstract machine that continuously produces tokens, consumes energy,
+and\
+becomes increasingly energy-hungry as output rises, generating heat through certain actions.\
 The goal: survive as long as possible before the system collapses.
 
 ---
 
 ## ⚠️ Status
 
-This project is **in active prototype phase**.  
-Core systems (energy, wear, and tick cycle) are implemented and running.  
-UI layout and live updates are functional, but modules, economy, and event logic are still in design.
+This project is **in active prototype phase**.\
+Core systems (energy growth, heat, and tick cycle) are implemented and running.\
+UI layout and live updates are functional, but modules, economy, and event logic are still in
+design.
 
 ---
 
 ## 🧰 Current Prototype Features
 
 - Real-time tick cycle with live updates
-- Dynamic **energy**, **output**, and **wear** meters
+- Dynamic **energy**, **output**, and **heat** meters
 - Interactive **action buttons**:
   - **Buy Energy** (costs tokens, refills energy)
-  - **Repair Wear** (costs tokens, reduces wear)
 - Automatic enable/disable logic based on current state
 - Visual icons via Material Symbols for consistent UI
 
@@ -32,8 +33,9 @@ UI layout and live updates are functional, but modules, economy, and event logic
 
 - Survive as long as possible → **score = time survived**
 - Keep the machine alive by:
-  - Managing **energy**
-  - Repairing **wear**
+  - Managing **energy** and its increasing cost
+  - Controlling **heat** buildup through specific actions
+  - Managing **wear** which leads to failure
   - Installing and upgrading **modules**
 
 ---
@@ -45,30 +47,31 @@ The machine runs in continuous **ticks** — short real-time intervals that repr
 Each tick:
 
 - Produces tokens (`+🪙`)
-- Consumes energy (`−⚡`)
-- Increases wear (`+💥`)
+- Increases energy cost (`↑⚡ cost`)
+- Generates heat (`+🔥`) when heat-producing modules or actions run (e.g., Generator, Overclock,
+  Fabricator)
 
-The player can take actions (buy energy, repair, activate or upgrade modules) at any time —\
-but time and deterioration never stop.\
-When energy reaches **0** or damage hits **100%**, the machine fails.
+The player can take actions (buy energy, activate or upgrade modules) at any time —\
+but time and wear accumulation never stop.\
+When energy reaches **0** or wear hits **100%**, the machine fails.
 
 ---
 
 ## ⚙️ System Overview
 
-All key systems are connected through one feedback triangle:
+All key systems are connected through one feedback loop:
 
 ```
-Tokens ↑ → Energy ↓ → Wear ↑
-     ↖---------------↙
+Actions/Output ↑ → Heat ↑ → Wear ↑ → Collapse (at 100%)
+              ↖----------- Cooling ↓
+
+Energy Cost Growth (separate pressure)
 ```
 
-- **Tokens** funds upgrades and repairs, but upgrades increase consumption.
-- **Energy** keeps the system alive but drains constantly.
-- **Wear** rises each tick — faster when the machine runs hot.
-- **Tick speed** accelerates over time, intensifying the cycle.
-
-Balancing these three axes is the heart of survival: every optimization pushes another part closer to collapse.
+- Output/actions can generate heat.
+- Heat builds only from those actions and **amplifies wear**.
+- Wear is the only collapse condition (at 100%). Energy 0 also fails.
+- Energy cost growth is a separate, time-based pressure to scale production.
 
 ---
 
@@ -83,31 +86,24 @@ All bays exist from the start — but most are inactive until the player install
   system.
 - **Upgrading:** installed bays can be enhanced, increasing benefits and drawbacks.
 - **Categories:**
-  - **Generator** – increases production but raises energy use & wear
-  - **Battery** – expands energy capacity but raises consumption
-  - **Cooling** – slows wear & tick rate but reduces output
-  - **Durability / Stabilizer** – reduces wear permanently
-  - **Overclock** – boosts output, speeds up ticks, adds stress
+  - **Generator** – increases output but raises heat and energy cost
+  - **Battery** – expands energy capacity but increases energy cost
+  - **Cooling** – lowers heat; **costs energy**.
+  - **Efficiency** – slows energy cost growth and improves sustainability
+  - **Fabricator** – produces upgrade currency for modules
 - **Persistence:** bays remain consistent throughout a run; no RNG churn.
-- **Emergent variety:** runs diverge through activation order, upgrade timing, and risk management —
+- **Emergent variety:** runs diverge through activation order, upgrade timing, and risk management
+  —\
   not through randomness.
 
 ---
 
-## 💥 Wear & Repairs
+## 💥 Heat & Wear Dynamics
 
-**Wear** increases each tick, scaling dynamically with time survived.  
-As the machine ages, each cycle adds slightly more damage than the last — creating inevitable decay.
-
-Each installed module contributes to wear in unique proportions.  
-**Cooling** and **Durability** modules mitigate this buildup and can delay system collapse.
-
-**Repairs** reduce accumulated damage but cost money — they buy time, not safety.  
-Repairs become more frequent and expensive the longer the machine runs.
-
-**Overflow penalty:** if token storage reaches capacity, the system overheats,  
-immediately adding a bonus wear of **+5 %** that tick.  
-This encourages spending or upgrading before hitting maximum output.
+**Heat** is generated by specific actions and modules (e.g., Generator, Overclock, Fabricator).\
+Each degree of heat amplifies ongoing wear.\
+**Cooling** modules reduce heat but consume energy.\
+Overheating alone does not cause failure; only when wear reaches 100% does the system collapse.
 
 ---
 
@@ -116,7 +112,7 @@ This encourages spending or upgrading before hitting maximum output.
 Occasional events and market shifts add unpredictability to the system:
 
 - **Energy price drift:** trends upward over time, with small fluctuations per tick.
-- **Instability events:** temporary modifiers to tick speed, wear, or consumption.
+- **Instability events:** temporary modifiers to tick speed, heat generation, or consumption.
 - **Emergency actions:** one-time relief options (e.g., temporary battery injection).
 
 Events are rare but impactful — designed to disrupt routines and force adaptive play.
@@ -125,17 +121,16 @@ Events are rare but impactful — designed to disrupt routines and force adaptiv
 
 ## 🧮 Balancing (initial draft values)
 
-- Base production: **+2 🪙/tick** (reduced slightly as wear increases)
-- Base consumption: **−1 ⚡/tick**
-- Base wear rate: **+2 %/tick**, increases gradually with time survived  
-  `wearDelta = 0.02 + (tickCount / 10000)`
-- Overflow penalty: **+5 % wear** when output storage is full  
+- Base production: **+2 🪙/tick**
+- Base energy cost growth: **+0.02 ⚡/tick** (time-based pressure)
+- Starting wear: **2 %**
+- No automatic wear per tick; wear increase depends on heat amplification
+- Example wear formula: `wearDelta = heat * 0.05`
+- Heat generation: from specific actions/modules (e.g., Generator, Overclock, Fabricator)
+- Cooling effect: reduces heat by a fixed amount per tick (e.g., `−1 °C/tick`)
 - Energy capacity: **10 ⚡**
-- Starting wear: **0 %**
 - Energy price: **3 🪙 for +5 ⚡**
-- Repair cost: **5 🪙 for −10 % wear**
 - Tick duration: **6 s**
-
 
 ---
 
@@ -152,13 +147,11 @@ Events are rare but impactful — designed to disrupt routines and force adaptiv
 - Designed for clarity under pressure, adaptable to both mobile and desktop.
 - Style: sleek, high-tech, industrial — no decorative illustrations.
 
-
 ---
 
 ## 🎮 Controls
 
-- **Buy Energy** → increases ⚡ energy by amount shown on the button.  
-- **Repair Wear** → reduces wear by the shown percentage.  
+- **Buy Energy** → increases ⚡ energy by amount shown on the button.
 - Buttons disable automatically when insufficient tokens or caps reached.
 
 ---
@@ -166,14 +159,14 @@ Events are rare but impactful — designed to disrupt routines and force adaptiv
 ## 📌 Roadmap
 
 - [x] UI prototype (modular tiles, HUD, live feedback)
-- [x] Core state engine (energy, wear, tick)
+- [x] Core state engine (energy growth, heat, tick)
 - [x] Interactive action system (buttons, costs, enable/disable logic)
-- [ ] Token system (income, purchases)
+- [ ] Heat and efficiency system
+- [ ] Upgrade economy and secondary currency
 - [ ] Bay system (activation, upgrades, interactions)
 - [ ] Event & market system
 - [ ] Visual feedback: alerts, color shifts, animations
 - [ ] Balancing iterations & playtest loops
-
 
 ---
 
