@@ -31,6 +31,10 @@ design.
 
 ## 🎯 Core Goal
 
+**There is no winning state.** The machine is designed to collapse.  
+Modules don't solve problems — they delay failure while creating new pressures.  
+Your score is how long you can keep it running before the inevitable breakdown.
+
 - Survive as long as possible → **score = time survived**
 - Keep the machine alive by:
   - Managing **energy** and its increasing cost
@@ -123,9 +127,9 @@ Events are rare but impactful — designed to disrupt routines and force adaptiv
 
 - Base production: **+2 🪙/tick**
 - Base energy cost growth: **+0.02 ⚡/tick** (time-based pressure)
-- Starting wear: **2 %**
-- No automatic wear per tick; wear increase depends on heat amplification
-- Example wear formula: `wearDelta = heat * 0.05`
+- Base wear growth: **+2% per tick** (linear, constant rate)
+- Heat amplifies wear accumulation on top of base growth
+- Example wear formula: `wearDelta = baseWearPerTick + (heat * heatAmplificationFactor)`
 - Heat generation: from specific actions/modules (e.g., Generator, Overclock, Fabricator)
 - Cooling effect: reduces heat by a fixed amount per tick (e.g., `−1 °C/tick`)
 - Energy capacity: **10 ⚡**
