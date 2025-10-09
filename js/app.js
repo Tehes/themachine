@@ -88,7 +88,7 @@ function renderEnergy() {
 function renderWear() {
 	if (wearEls.fill) wearEls.fill.style.setProperty("--p", wear);
 	if (wearEls.val) wearEls.val.textContent = (wear * 100).toFixed(1);
-	if (wearEls.cons) wearEls.cons.textContent = (wearDelta * 100).toFixed(2);
+	if (wearEls.cons) wearEls.cons.textContent = (wearPerTick * 100).toFixed(2);
 }
 
 function renderOutput() {
@@ -292,59 +292,13 @@ function init() {
 	});
 }
 
-function setEnergyCapacity(n) {
-	n = Math.max(1, Math.floor(n));
-	energyState.capacity = n;
-	energyState.current = Math.min(energyState.current, n);
-	renderEnergy();
-}
-
-function setEnergyFill(n) {
-	n = Math.max(0, Math.min(n, energyState.capacity));
-	energyState.current = n;
-	renderEnergy();
-}
-
-function setEnergyConsumption(unitsPerTick) {
-	unitsPerTick = Math.max(0, unitsPerTick);
-	energyState.consPerTick = unitsPerTick;
-	renderEnergy();
-}
-
-function setTickInterval(ms) {
-	ms = Math.max(0, Math.floor(ms));
-	tickInterval = ms;
-}
-
-function setOutputCapacity(n) {
-	n = Math.max(0, Math.floor(n));
-	outputState.capacity = n;
-	outputState.current = Math.min(outputState.current, n);
-	renderOutput();
-}
-function setOutputFill(n) {
-	n = Math.max(0, Math.min(Math.floor(n), outputState.capacity));
-	outputState.current = n;
-	renderOutput();
-}
-function setOutputProduction(perTick) {
-	perTick = Math.max(0, Math.floor(perTick));
-	outputState.prodPerTick = perTick;
-	renderOutput();
-}
-
 /* --------------------------------------------------------------------------------------------------
 public members, exposed with return statement
 ---------------------------------------------------------------------------------------------------*/
 globalThis.machine = {
 	init,
-	setEnergyCapacity,
-	setEnergyFill,
-	setEnergyConsumption,
-	setTickInterval,
-	setOutputCapacity,
-	setOutputFill,
-	setOutputProduction,
+	startTicks,
+	stopTicks,
 };
 
 globalThis.machine.init();
