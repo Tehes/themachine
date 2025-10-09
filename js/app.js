@@ -32,15 +32,6 @@ const wearState = {
 	perTick: 0.02,
 };
 
-const vaultState = {
-	level: 0,
-	maxLevel: 3,
-	cost: 9,
-	costIncrease: 9, // per Level
-	capBonusPerLevel: 10,
-	wearIncreasePerLevel: 0.01,
-};
-
 // --- DOM refs ---
 const energyEls = {
 	fill: document.querySelector(".tile.energy .fill"),
@@ -81,6 +72,38 @@ const UNIT_TPL = {
 	"token": '<span class="icon">token</span>',
 };
 
+const modules = {
+	vault: {
+		id: "vault",
+		name: "Vault",
+		level: 0,
+		maxLevel: 3,
+		cost: 9,
+		costIncrease: 9,
+		labels: {
+			install: "Install",
+			upgrade: (level) => `Level ${level + 1}`,
+			maxLevel: "Max Level",
+		},
+		effects: [
+			{
+				type: "outputCapacity",
+				value: 10,
+				perLevel: true,
+				positive: true,
+				label: (val) => `Token Cap +${val}`,
+			},
+			{
+				type: "wearRate",
+				value: 0.01,
+				perLevel: true,
+				positive: false,
+				label: (val) => `Wear Rate +${(val * 100).toFixed(1)}%`,
+			},
+		],
+	},
+};
+
 /* --------------------------------------------------------------------------------------------------
 functions
 ---------------------------------------------------------------------------------------------------*/
@@ -93,38 +116,94 @@ function fmt2(n) {
 	return s.replace(/\.00$/, "").replace(/(\.\d)0$/, "$1");
 }
 
-function renderVault() {
-	const { level, capBonusPerLevel, wearIncreasePerLevel, maxLevel } = vaultState;
+const effectHandlers = {
+	outputCapacity: (value) => {
+		outputState.capacity += value;
+	},
+	wearRate: (value) => {
+		wearState.perTick += value;
+	},
+	energyCapacity: (value) => {
+		energyState.capacity += value;
+	},
+	energyCost: (value) => {
+		energyState.consPerTick += value;
+	},
+};
 
-	if (vaultEls.level) vaultEls.level.textContent = level;
-	if (vaultEls.tile) vaultEls.tile.dataset.locked = level === 0 ? "true" : "false";
+function getModuleElements(moduleId) {
+	const tile = document.querySelector(`[data-module="${moduleId}"]`);
+	return {
+		tile: tile,
+		name: tile?.querySelector("[data-module-name]"),
+		level: tile?.querySelector("[data-module-level]"),
+		effects: tile?.querySelector("[data-module-effects]"),
+		nextEffects: tile?.querySelector("[data-module-next-effects]"),
+	};
+}
 
-	if (vaultEls.effects) {
-		if (level === 0) {
-			vaultEls.effects.innerHTML = '<span class="inactive">—</span>';
-		} else {
-			const totalCap = level * capBonusPerLevel;
-			const totalWear = level * wearIncreasePerLevel;
-			vaultEls.effects.innerHTML = `
-                <div class="effect-item positive">✓ Token Cap +${totalCap}</div>
-                <div class="effect-item negative">✗ Wear Rate +${
-				(totalWear * 100).toFixed(1)
-			}%</div>
-            `;
+function upgradeModule(moduleId) {
+	const module = modules[moduleId];
+	if (!module || module.level >= module.maxLevel) return false;
+
+	const cost = module.cost;
+	if (outputState.current < cost) return false;
+
+	// Pay cost
+	outputState.current -= cost;
+
+	// Apply effects
+	for (const effect of module.effects) {
+		const handler = effectHandlers[effect.type];
+		if (handler) {
+			handler(effect.value);
 		}
 	}
 
-	const nextEffectsEl = document.querySelector(".tile.module.vault .next-effects");
-	if (nextEffectsEl) {
-		if (level >= maxLevel) {
-			nextEffectsEl.innerHTML = '<span class="inactive">—</span>';
+	// Update module state
+	module.level++;
+	module.cost += module.costIncrease;
+
+	return true;
+}
+
+function renderModule(moduleId) {
+	const module = modules[moduleId];
+	const els = getModuleElements(moduleId); // DOM refs per module
+
+	if (els.name) els.name.textContent = module.name;
+	if (els.level) els.level.textContent = module.level;
+	if (els.tile) els.tile.dataset.locked = module.level === 0 ? "true" : "false";
+
+	// Active effects
+	if (els.effects) {
+		if (module.level === 0) {
+			els.effects.innerHTML = '<span class="inactive">—</span>';
 		} else {
-			nextEffectsEl.innerHTML = `
-                <div class="effect-item positive">→ Token Cap +${capBonusPerLevel}</div>
-                <div class="effect-item negative">→ Wear Rate +${
-				(wearIncreasePerLevel * 100).toFixed(1)
-			}%</div>
-            `;
+			const effectsHtml = module.effects.map((eff) => {
+				const totalValue = eff.perLevel ? eff.value * module.level : eff.value;
+				const cssClass = eff.positive ? "positive" : "negative";
+				const icon = eff.positive ? "✓" : "✗";
+				return `<div class="effect-item ${cssClass}">${icon} ${
+					eff.label(totalValue)
+				}</div>`;
+			}).join("");
+			els.effects.innerHTML = effectsHtml;
+		}
+	}
+
+	// Next level preview
+	if (els.nextEffects) {
+		if (module.level >= module.maxLevel) {
+			els.nextEffects.innerHTML = '<span class="inactive">—</span>';
+		} else {
+			const nextHtml = module.effects.map((eff) => {
+				const cssClass = eff.positive ? "positive" : "negative";
+				// NEU: Zeige kumulativen Wert nach dem Upgrade
+				const nextTotalValue = eff.perLevel ? eff.value * (module.level + 1) : eff.value;
+				return `<div class="effect-item ${cssClass}">→ ${eff.label(nextTotalValue)}</div>`;
+			}).join("");
+			els.nextEffects.innerHTML = nextHtml;
 		}
 	}
 }
@@ -140,9 +219,9 @@ function renderEnergy() {
 
 function renderWear() {
 	const hueStart = 220; // blau (0% wear)
-    const hueEnd = 280;   // violett/magenta (100% wear)
-    const hue = hueStart + (wearState.current * (hueEnd - hueStart));
-    
+	const hueEnd = 280; // violett/magenta (100% wear)
+	const hue = hueStart + (wearState.current * (hueEnd - hueStart));
+
 	document.documentElement.style.setProperty("--hue", Math.round(hue));
 
 	if (wearEls.fill) wearEls.fill.style.setProperty("--p", wearState.current);
@@ -290,26 +369,26 @@ function refreshButtons() {
 				break;
 			}
 			case "upgrade-vault": {
-				const { level, maxLevel, cost } = vaultState;
+				const module = modules.vault;
 
-				enabled = level < maxLevel && outputState.current >= cost;
+				enabled = module.level < module.maxLevel && outputState.current >= module.cost;
 
-				const labelEl = btn.querySelector("[data-vault-action]");
+				const labelEl = btn.querySelector("[data-module-action]");
 				if (labelEl) {
-					labelEl.textContent = level === 0
-						? "Install"
-						: level >= maxLevel
-						? "Max Level"
-						: `Level ${level + 1}`;
+					labelEl.textContent = module.level === 0
+						? module.labels.install
+						: module.level >= module.maxLevel
+						? module.labels.maxLevel
+						: module.labels.upgrade(module.level);
 				}
 
-				if (level >= maxLevel) {
+				if (module.level >= module.maxLevel) {
 					btn.querySelector(".cost").hidden = true;
 				} else {
 					btn.querySelector(".cost").hidden = false;
-					btn.dataset.cost = cost;
+					btn.dataset.cost = module.cost;
 					const costEl = btn.querySelector(".cost-val");
-					if (costEl) costEl.textContent = cost;
+					if (costEl) costEl.textContent = module.cost;
 				}
 
 				break;
@@ -347,15 +426,11 @@ function executeAction(btn) {
 			break;
 		}
 		case "upgrade-vault": {
-			outputState.current = Math.max(0, outputState.current - cost);
-			vaultState.level++;
-			outputState.capacity += vaultState.capBonusPerLevel;
-			wearState.perTick += vaultState.wearIncreasePerLevel;
-			vaultState.cost += vaultState.costIncrease;
-
-			renderVault();
-			renderWear();
-			renderOutput();
+			if (upgradeModule("vault")) {
+				renderModule("vault");
+				renderWear();
+				renderOutput();
+			}
 			break;
 		}
 
@@ -376,7 +451,7 @@ function init() {
 	renderEnergy();
 	renderWear();
 	renderOutput();
-	renderVault();
+	renderModule("vault");
 	renderTickStatic();
 	startTicks();
 	renderButtons();
