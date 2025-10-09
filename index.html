@@ -24,7 +24,7 @@
 		<section class="tile" data-role="title" data-w="12" data-h="1">
 			<h1>The Machine</h1>
 		</section>
-		<section class="tile energy" data-role="energy" data-w="2" data-h="2">
+		<section class="tile energy" data-role="energy" data-w="4" data-h="2">
 			<h3>Energy</h3>
 			<div class="meter">
 				<div class="fill" style="--p: 1;"></div>
@@ -40,8 +40,7 @@
 				</span>
 			</div>
 			<div class="actions">
-				<button class="btn buy" data-action="buy-energy" data-cost="3" data-amount="5"
-					data-unit="bolt">
+				<button class="btn buy" data-action="buy-energy" data-cost="3" data-amount="5" data-unit="bolt">
 					<span class="label">
 						<span>Buy </span>
 						<span class="amount"></span><span class="unit"></span>
@@ -101,6 +100,32 @@
 					+<span data-production>2</span><span class="unit"><span class="icon">token</span>/<span
 							class="icon">timelapse</span></span>
 				</span>
+			</div>
+		</section>
+		<section class="tile module vault" data-role="vault" data-w="2" data-h="4">
+			<div class="module-header">
+				<h3>Vault</h3>
+				<span class="module-level">Level <span data-vault-level>0</span></span>
+			</div>
+			<div class="module-section">
+				<h4>Active:</h4>
+				<div class="effects-list" data-vault-effects>
+					<span class="inactive">—</span>
+				</div>
+			</div>
+			<div class="module-section">
+				<h4>Next Level:</h4>
+				<div class="next-effects">
+					<div class="effect-item positive">→ Token Cap +10</div>
+				</div>
+			</div>
+			<div class="actions">
+				<button class="btn install" data-action="upgrade-vault">
+					<span class="label" data-vault-action>Install</span>
+					<span class="cost">
+						<span class="cost-val">9</span><span class="icon">token</span>
+					</span>
+				</button>
 			</div>
 		</section>
 	</main>

@@ -30,6 +30,14 @@ let wear = 0;
 const wearPerTick = 0.02; // configurable wear growth per tick (fraction of 1.0)
 const energyCostGrowth = 0.02; // units added to consPerTick each tick
 
+const vaultState = {
+	level: 0,
+	maxLevel: 3,
+	cost: 9,
+	costIncrease: 9, // per Level
+	capBonusPerLevel: 10,
+};
+
 // --- DOM refs ---
 const energyEls = {
 	fill: document.querySelector(".tile.energy .fill"),
@@ -57,6 +65,12 @@ const tickEls = {
 	duration: document.querySelector(".tile.tick [data-tick-duration]"),
 };
 
+const vaultEls = {
+	tile: document.querySelector(".tile.module.vault"),
+	level: document.querySelector("[data-vault-level]"),
+	effects: document.querySelector("[data-vault-effects]"),
+};
+
 const buttons = Array.from(document.querySelectorAll(".actions .btn"));
 
 const UNIT_TPL = {
@@ -74,6 +88,22 @@ function clamp01(x) {
 function fmt2(n) {
 	const s = n.toFixed(2);
 	return s.replace(/\.00$/, "").replace(/(\.\d)0$/, "$1");
+}
+
+function renderVault() {
+	const { level, capBonusPerLevel } = vaultState;
+
+	if (vaultEls.level) vaultEls.level.textContent = level;
+	if (vaultEls.tile) vaultEls.tile.dataset.locked = level === 0 ? "true" : "false";
+	if (vaultEls.effects) {
+		if (level === 0) {
+			vaultEls.effects.innerHTML = '<span class="inactive">—</span>';
+		} else {
+			const totalCap = level * capBonusPerLevel;
+			vaultEls.effects.innerHTML =
+				`<div class="effect-item positive">✓ Token Cap +${totalCap}</div>`;
+		}
+	}
 }
 
 function renderEnergy() {
@@ -232,6 +262,32 @@ function refreshButtons() {
 					amount > 0; // >0%
 				break;
 			}
+			case "upgrade-vault": {
+				const { level, maxLevel, cost } = vaultState;
+
+				enabled = level < maxLevel && outputState.current >= cost;
+
+				const labelEl = btn.querySelector("[data-vault-action]");
+				if (labelEl) {
+					labelEl.textContent = level === 0
+						? "Install"
+						: level >= maxLevel
+						? "Max Level"
+						: `Level ${level + 1}`;
+				}
+
+				if (level >= maxLevel) {
+					btn.querySelector(".cost").hidden = true;
+				} else {
+					btn.querySelector(".cost").hidden = false;
+					btn.dataset.cost = cost;
+					const costEl = btn.querySelector(".cost-val");
+					if (costEl) costEl.textContent = cost;
+				}
+
+				break;
+			}
+
 			default:
 				enabled = false;
 		}
@@ -263,6 +319,17 @@ function executeAction(btn) {
 			renderOutput();
 			break;
 		}
+		case "upgrade-vault": {
+			outputState.current = Math.max(0, outputState.current - cost);
+			vaultState.level++;
+			outputState.capacity += vaultState.capBonusPerLevel;
+			vaultState.cost += vaultState.costIncrease;
+
+			renderVault();
+			renderOutput();
+			break;
+		}
+
 		default:
 			console.warn("Unhandled action:", action);
 	}
@@ -280,6 +347,7 @@ function init() {
 	renderEnergy();
 	renderWear();
 	renderOutput();
+	renderVault();
 	renderTickStatic();
 	startTicks();
 	renderButtons();
