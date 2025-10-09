@@ -15,9 +15,10 @@ let running = false;
 
 // --- Core State ---
 const energyState = {
-	current: 10, // units
-	capacity: 10, // units (max)
-	consPerTick: 1, // units per tick
+	current: 10,
+	capacity: 10,
+	consPerTick: 1,
+	costGrowth: 0.02,
 };
 
 const outputState = {
@@ -26,9 +27,10 @@ const outputState = {
 	prodPerTick: 2, // tokens per tick
 };
 
-let wear = 0;
-const wearPerTick = 0.02; // configurable wear growth per tick (fraction of 1.0)
-const energyCostGrowth = 0.02; // units added to consPerTick each tick
+const wearState = {
+	current: 0,
+	perTick: 0.02,
+};
 
 const vaultState = {
 	level: 0,
@@ -36,6 +38,7 @@ const vaultState = {
 	cost: 9,
 	costIncrease: 9, // per Level
 	capBonusPerLevel: 10,
+	wearIncreasePerLevel: 0.01,
 };
 
 // --- DOM refs ---
@@ -91,17 +94,37 @@ function fmt2(n) {
 }
 
 function renderVault() {
-	const { level, capBonusPerLevel } = vaultState;
+	const { level, capBonusPerLevel, wearIncreasePerLevel, maxLevel } = vaultState;
 
 	if (vaultEls.level) vaultEls.level.textContent = level;
 	if (vaultEls.tile) vaultEls.tile.dataset.locked = level === 0 ? "true" : "false";
+
 	if (vaultEls.effects) {
 		if (level === 0) {
 			vaultEls.effects.innerHTML = '<span class="inactive">—</span>';
 		} else {
 			const totalCap = level * capBonusPerLevel;
-			vaultEls.effects.innerHTML =
-				`<div class="effect-item positive">✓ Token Cap +${totalCap}</div>`;
+			const totalWear = level * wearIncreasePerLevel;
+			vaultEls.effects.innerHTML = `
+                <div class="effect-item positive">✓ Token Cap +${totalCap}</div>
+                <div class="effect-item negative">✗ Wear Rate +${
+				(totalWear * 100).toFixed(1)
+			}%</div>
+            `;
+		}
+	}
+
+	const nextEffectsEl = document.querySelector(".tile.module.vault .next-effects");
+	if (nextEffectsEl) {
+		if (level >= maxLevel) {
+			nextEffectsEl.innerHTML = '<span class="inactive">—</span>';
+		} else {
+			nextEffectsEl.innerHTML = `
+                <div class="effect-item positive">→ Token Cap +${capBonusPerLevel}</div>
+                <div class="effect-item negative">→ Wear Rate +${
+				(wearIncreasePerLevel * 100).toFixed(1)
+			}%</div>
+            `;
 		}
 	}
 }
@@ -116,9 +139,15 @@ function renderEnergy() {
 }
 
 function renderWear() {
-	if (wearEls.fill) wearEls.fill.style.setProperty("--p", wear);
-	if (wearEls.val) wearEls.val.textContent = (wear * 100).toFixed(1);
-	if (wearEls.cons) wearEls.cons.textContent = (wearPerTick * 100).toFixed(2);
+	const hueStart = 220; // blau (0% wear)
+    const hueEnd = 280;   // violett/magenta (100% wear)
+    const hue = hueStart + (wearState.current * (hueEnd - hueStart));
+    
+	document.documentElement.style.setProperty("--hue", Math.round(hue));
+
+	if (wearEls.fill) wearEls.fill.style.setProperty("--p", wearState.current);
+	if (wearEls.val) wearEls.val.textContent = (wearState.current * 100).toFixed(1);
+	if (wearEls.cons) wearEls.cons.textContent = (wearState.perTick * 100).toFixed(2);
 }
 
 function renderOutput() {
@@ -185,13 +214,13 @@ function applyTick() {
 	}
 
 	// Increase energy consumption per tick
-	energyState.consPerTick += energyCostGrowth;
+	energyState.consPerTick += energyState.costGrowth;
 
 	// Energy drains by integer units per tick
 	energyState.current = Math.max(0, energyState.current - energyState.consPerTick);
 
 	// Wear increases
-	wear = clamp01(wear + wearPerTick);
+	wearState.current = clamp01(wearState.current + wearState.perTick);
 }
 
 function startTicks() {
@@ -233,7 +262,7 @@ function tick() {
 	refreshButtons();
 
 	// stop when energy empty or wear full
-	if (energyState.current <= 0 || wear >= 1) {
+	if (energyState.current <= 0 || wearState.current >= 1) {
 		stopTicks();
 		return;
 	}
@@ -257,9 +286,7 @@ function refreshButtons() {
 				break;
 			}
 			case "repair-wear": {
-				enabled = outputState.current >= cost && // enough Tokens
-					wear > 0 && // need repair
-					amount > 0; // >0%
+				enabled = outputState.current >= cost && wearState.current > 0 && amount > 0;
 				break;
 			}
 			case "upgrade-vault": {
@@ -314,7 +341,7 @@ function executeAction(btn) {
 		}
 		case "repair-wear": {
 			outputState.current = Math.max(0, outputState.current - cost);
-			wear = clamp01(wear - amount / 100); // amount is given in percent
+			wearState.current = clamp01(wearState.current - amount / 100); // amount is given in percent
 			renderWear();
 			renderOutput();
 			break;
@@ -323,9 +350,11 @@ function executeAction(btn) {
 			outputState.current = Math.max(0, outputState.current - cost);
 			vaultState.level++;
 			outputState.capacity += vaultState.capBonusPerLevel;
+			wearState.perTick += vaultState.wearIncreasePerLevel;
 			vaultState.cost += vaultState.costIncrease;
 
 			renderVault();
+			renderWear();
 			renderOutput();
 			break;
 		}

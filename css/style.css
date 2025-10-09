@@ -7,7 +7,7 @@
     --font-mono: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
 
     color-scheme: dark;
-    --hue: 220;
+    --hue: 220; /* between 220 at 0% wear and 280 at 100% wear */
     --tick-duration: 6s;
     /* calm blue base, can turn red, when engine gets damaged */
     --bg-color: hsl(var(--hue) 30% 15%);
