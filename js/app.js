@@ -170,7 +170,7 @@ const effectHandlers = {
 	heatGeneration: (value) => {
 		heatState.current += value;
 		heatState.current = Math.min(heatState.maxHeat, Math.max(0, heatState.current));
-		wearState.perTick += heatState.wearMultiplier * heatState.current;
+		wearState.perTick += heatState.wearMultiplier / 100 * heatState.current;
 	},
 	outputProduction: (value) => {
 		outputState.prodPerTick += value;
