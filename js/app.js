@@ -32,6 +32,12 @@ const wearState = {
 	perTick: 0.02,
 };
 
+const heatState = {
+    current: 50,
+    maxHeat: 100,
+    wearMultiplier: 0.0005,
+};
+
 // --- DOM refs ---
 const energyEls = {
 	fill: document.querySelector(".tile.energy .fill"),
@@ -59,10 +65,10 @@ const tickEls = {
 	duration: document.querySelector(".tile.tick [data-tick-duration]"),
 };
 
-const vaultEls = {
-	tile: document.querySelector(".tile.module.vault"),
-	level: document.querySelector("[data-vault-level]"),
-	effects: document.querySelector("[data-vault-effects]"),
+const heatEls = {
+    fill: document.querySelector(".tile.heat .fill"),
+    temp: document.querySelector(".tile.heat [data-heat-temp]"),
+    multiplier: document.querySelector(".tile.heat [data-heat-multiplier]"),
 };
 
 const buttons = Array.from(document.querySelectorAll(".actions .btn"));
@@ -129,6 +135,10 @@ const effectHandlers = {
 	energyCost: (value) => {
 		energyState.consPerTick += value;
 	},
+	heatGeneration: (value) => {
+        heatState.current += value;
+        heatState.current = Math.min(heatState.maxHeat, Math.max(0, heatState.current));
+    },
 };
 
 function getModuleElements(moduleId) {
@@ -239,6 +249,15 @@ function renderOutput() {
 	if (outputEls.prod) outputEls.prod.textContent = prodPerTick.toFixed(2);
 }
 
+function renderHeat() {
+    const { current, maxHeat } = heatState;
+    const p = Math.max(0, Math.min(1, current / maxHeat));
+    
+    if (heatEls.fill) heatEls.fill.style.setProperty("--p", p);
+    if (heatEls.temp) heatEls.temp.textContent = Math.round(current);
+	if (heatEls.multiplier) heatEls.multiplier.textContent = (heatState.wearMultiplier * 100).toFixed(2);
+}
+
 function renderButtons() {
 	for (const btn of buttons) {
 		const amountEl = btn.querySelector(".amount");
@@ -298,7 +317,7 @@ function applyTick() {
 	// Energy drains by integer units per tick
 	energyState.current = Math.max(0, energyState.current - energyState.consPerTick);
 
-	// Wear increases
+	// Wear increases 
 	wearState.current = clamp01(wearState.current + wearState.perTick);
 }
 
@@ -335,6 +354,7 @@ function tick() {
 	applyTick();
 	renderTickStatic();
 	renderEnergy();
+	renderHeat();
 	renderWear();
 	renderOutput();
 	renderButtons();
@@ -450,6 +470,7 @@ function init() {
 
 	renderEnergy();
 	renderWear();
+	renderHeat();
 	renderOutput();
 	renderModule("vault");
 	renderTickStatic();

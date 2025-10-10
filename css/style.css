@@ -370,7 +370,7 @@ METER COMPONENT (generic)
 
 /*
 -------------------------------------------------------------------
-DIAL COMPONENT (generic)
+DIAL COMPONENT
 -------------------------------------------------------------------
 */
 
@@ -392,6 +392,51 @@ DIAL COMPONENT (generic)
     margin-inline: auto;
 }
 
+/*
+-------------------------------------------------------------------
+HEAT TILE
+-------------------------------------------------------------------
+*/
+
+.tile.heat {
+    display: flex;
+    gap: 12px;
+}
+
+.tile.heat .meter {
+    height: 100%;
+    width: 25px;
+    transform: rotate(180deg);
+}
+
+.tile.heat .meter .fill {
+    --q: calc(1 - var(--p));
+    --hi-threshold: 0.8;
+    --hi: clamp(0, (var(--p) - var(--hi-threshold)) * 20, 1);
+    transition: height 300ms linear, background-color 300ms linear;
+    width: 100%;
+    height: calc(var(--p) * 100%);
+    background-color: hsl(calc(60deg * var(--q)), 90%, 55%);
+    box-shadow: 0 0 calc(15px * var(--hi)) hsl(0 90% 60% / var(--hi));
+}
+
+.tile.heat .info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.tile.heat .heat-rate {
+    font-family: var(--font-mono);
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.tile.heat .wear-impact {
+    opacity: 0.8;
+}
 
 /*
 -------------------------------------------------------------------

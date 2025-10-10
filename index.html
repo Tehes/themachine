@@ -24,6 +24,17 @@
 		<section class="tile" data-role="title" data-w="12" data-h="1">
 			<h1>The Machine</h1>
 		</section>
+		<section class="tile tick" data-role="tick" data-w="2" data-h="2">
+			<h3>Tick</h3>
+			<div class="dial" style="--p: 1">
+				<div class="dial-face"></div>
+			</div>
+			<div class="numbers">
+				<span class="pair">#<span data-tick-count>0</span><span class="unit"></span></span>
+				<span class="duration"><span data-tick-duration>2</span><span class="unit">s/<span
+							class="icon">timelapse</span></span></span>
+			</div>
+		</section>
 		<section class="tile energy" data-role="energy" data-w="4" data-h="2">
 			<h3>Energy</h3>
 			<div class="meter">
@@ -59,7 +70,7 @@
 				<div class="fill" style="--p: 0;"></div>
 			</div>
 			<div class="numbers">
-				<span class="pair"><span data-wear>0</span><span class="unit">%</span></span>
+				<span class="pair"><span data-wear>0</span><span class="unit">%</span><span class="icon">warning</span></span>
 				<span class="consumption">
 					+<span data-consumption></span><span class="unit">%/<span class="icon">timelapse</span></span>
 				</span>
@@ -76,18 +87,7 @@
 				</button>
 			</div>
 		</section>
-		<section class="tile tick" data-role="tick" data-w="2" data-h="2">
-			<h3>Tick</h3>
-			<div class="dial" style="--p: 1">
-				<div class="dial-face"></div>
-			</div>
-			<div class="numbers">
-				<span class="pair">#<span data-tick-count>0</span><span class="unit"></span></span>
-				<span class="duration"><span data-tick-duration>2</span><span class="unit">s/<span
-							class="icon">timelapse</span></span></span>
-			</div>
-		</section>
-		<section class="tile output" data-role="output" data-w="4" data-h="2">
+		<section class="tile output" data-role="output" data-w="2" data-h="2">
 			<h3>Token Output</h3>
 			<div class="meter">
 				<div class="fill" style="--p: 0;"></div>
@@ -100,6 +100,22 @@
 					+<span data-production>2</span><span class="unit"><span class="icon">token</span>/<span
 							class="icon">timelapse</span></span>
 				</span>
+			</div>
+		</section>
+		<section class="tile heat" data-w="2" data-h="2">
+			<div class="meter">
+				<div class="fill" style="--p: 0;"></div>
+			</div>
+			<div class="info">
+				<div>
+					<h3>Heat</h3>
+					<div class="heat-rate">
+						<span data-heat-temp>0</span>
+					</div>
+				</div>
+				<div class="wear-impact">
+					<div>+<span data-heat-multiplier>0.1</span>% <span class="icon">warning</span>/<span class="icon">mode_heat</span></div>
+				</div>
 			</div>
 		</section>
 		<section class="tile module vault" data-module="vault" data-w="2" data-h="4">
