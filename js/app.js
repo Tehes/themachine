@@ -33,9 +33,9 @@ const wearState = {
 };
 
 const heatState = {
-    current: 50,
-    maxHeat: 100,
-    wearMultiplier: 0.0005,
+	current: 0,
+	maxHeat: 100,
+	wearMultiplier: 0.1,
 };
 
 // --- DOM refs ---
@@ -66,9 +66,9 @@ const tickEls = {
 };
 
 const heatEls = {
-    fill: document.querySelector(".tile.heat .fill"),
-    temp: document.querySelector(".tile.heat [data-heat-temp]"),
-    multiplier: document.querySelector(".tile.heat [data-heat-multiplier]"),
+	fill: document.querySelector(".tile.heat .fill"),
+	temp: document.querySelector(".tile.heat [data-heat-temp]"),
+	multiplier: document.querySelector(".tile.heat [data-heat-multiplier]"),
 };
 
 const buttons = Array.from(document.querySelectorAll(".actions .btn"));
@@ -76,6 +76,9 @@ const buttons = Array.from(document.querySelectorAll(".actions .btn"));
 const UNIT_TPL = {
 	"bolt": '<span class="icon">bolt</span>',
 	"token": '<span class="icon">token</span>',
+	"warning": '<span class="icon">warning</span>',
+	"timelapse": '<span class="icon">timelapse</span>',
+	"heat": '<span class="icon">mode_heat</span>',
 };
 
 const modules = {
@@ -97,14 +100,43 @@ const modules = {
 				value: 10,
 				perLevel: true,
 				positive: true,
-				label: (val) => `Token Cap +${val}`,
+				label: (val) => `Token Cap +${val}${UNIT_TPL.token}`,
 			},
 			{
 				type: "wearRate",
 				value: 0.01,
 				perLevel: true,
 				positive: false,
-				label: (val) => `Wear Rate +${(val * 100).toFixed(1)}%`,
+				label: (val) => `Wear Rate +${(val * 100).toFixed(1)}${UNIT_TPL.warning}`,
+			},
+		],
+	},
+	generator: {
+		id: "generator",
+		name: "Generator",
+		level: 0,
+		maxLevel: 3,
+		cost: 1,
+		costIncrease: 1,
+		labels: {
+			install: "Install",
+			upgrade: (level) => `Level ${level + 1}`,
+			maxLevel: "Max Level",
+		},
+		effects: [
+			{
+				type: "outputProduction",
+				value: 2,
+				perLevel: true,
+				positive: true,
+				label: (val) => `Token output +${val}${UNIT_TPL.token}/${UNIT_TPL.timelapse}`,
+			},
+			{
+				type: "heatGeneration",
+				value: 1,
+				perLevel: true,
+				positive: false,
+				label: (val) => `Heat +${val}${UNIT_TPL.heat}`,
 			},
 		],
 	},
@@ -136,9 +168,13 @@ const effectHandlers = {
 		energyState.consPerTick += value;
 	},
 	heatGeneration: (value) => {
-        heatState.current += value;
-        heatState.current = Math.min(heatState.maxHeat, Math.max(0, heatState.current));
-    },
+		heatState.current += value;
+		heatState.current = Math.min(heatState.maxHeat, Math.max(0, heatState.current));
+		wearState.perTick += heatState.wearMultiplier * heatState.current;
+	},
+	outputProduction: (value) => {
+		outputState.prodPerTick += value;
+	},
 };
 
 function getModuleElements(moduleId) {
@@ -250,12 +286,14 @@ function renderOutput() {
 }
 
 function renderHeat() {
-    const { current, maxHeat } = heatState;
-    const p = Math.max(0, Math.min(1, current / maxHeat));
-    
-    if (heatEls.fill) heatEls.fill.style.setProperty("--p", p);
-    if (heatEls.temp) heatEls.temp.textContent = Math.round(current);
-	if (heatEls.multiplier) heatEls.multiplier.textContent = (heatState.wearMultiplier * 100).toFixed(2);
+	const { current, maxHeat } = heatState;
+	const p = Math.max(0, Math.min(1, current / maxHeat));
+
+	if (heatEls.fill) heatEls.fill.style.setProperty("--p", p);
+	if (heatEls.temp) heatEls.temp.textContent = Math.round(current);
+	if (heatEls.multiplier) {
+		heatEls.multiplier.textContent = heatState.wearMultiplier.toFixed(2);
+	}
 }
 
 function renderButtons() {
@@ -317,7 +355,7 @@ function applyTick() {
 	// Energy drains by integer units per tick
 	energyState.current = Math.max(0, energyState.current - energyState.consPerTick);
 
-	// Wear increases 
+	// Wear increases
 	wearState.current = clamp01(wearState.current + wearState.perTick);
 }
 
@@ -413,6 +451,30 @@ function refreshButtons() {
 
 				break;
 			}
+			case "upgrade-generator": {
+				const module = modules.generator;
+
+				enabled = module.level < module.maxLevel && outputState.current >= module.cost;
+				const labelEl = btn.querySelector("[data-module-action]");
+				if (labelEl) {
+					labelEl.textContent = module.level === 0
+						? module.labels.install
+						: module.level >= module.maxLevel
+						? module.labels.maxLevel
+						: module.labels.upgrade(module.level);
+				}
+
+				if (module.level >= module.maxLevel) {
+					btn.querySelector(".cost").hidden = true;
+				} else {
+					btn.querySelector(".cost").hidden = false;
+					btn.dataset.cost = module.cost;
+					const costEl = btn.querySelector(".cost-val");
+					if (costEl) costEl.textContent = module.cost;
+				}
+
+				break;
+			}
 
 			default:
 				enabled = false;
@@ -453,6 +515,15 @@ function executeAction(btn) {
 			}
 			break;
 		}
+		case "upgrade-generator": {
+			if (upgradeModule("generator")) {
+				renderModule("generator");
+				renderHeat();
+				renderOutput();
+				renderWear();
+			}
+			break;
+		}
 
 		default:
 			console.warn("Unhandled action:", action);
@@ -473,6 +544,7 @@ function init() {
 	renderHeat();
 	renderOutput();
 	renderModule("vault");
+	renderModule("generator");
 	renderTickStatic();
 	startTicks();
 	renderButtons();

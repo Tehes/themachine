@@ -70,9 +70,11 @@
 				<div class="fill" style="--p: 0;"></div>
 			</div>
 			<div class="numbers">
-				<span class="pair"><span data-wear>0</span><span class="unit">%</span><span class="icon">warning</span></span>
+				<span class="pair"><span data-wear>0</span><span class="unit"><span
+							class="icon">warning</span></span></span>
 				<span class="consumption">
-					+<span data-consumption></span><span class="unit">%/<span class="icon">timelapse</span></span>
+					+<span data-consumption></span><span class="unit"><span class="icon">warning</span>/<span
+							class="icon">timelapse</span></span>
 				</span>
 			</div>
 			<div class="actions">
@@ -114,11 +116,12 @@
 					</div>
 				</div>
 				<div class="wear-impact">
-					<div>+<span data-heat-multiplier>0.1</span>% <span class="icon">warning</span>/<span class="icon">mode_heat</span></div>
+					<div>+<span data-heat-multiplier>0.1</span><span class="icon">warning</span>/<span
+							class="icon">mode_heat</span></div>
 				</div>
 			</div>
 		</section>
-		<section class="tile module vault" data-module="vault" data-w="2" data-h="4">
+		<section class="tile module" data-module="vault" data-w="2" data-h="4">
 			<div class="module-header">
 				<h3 data-module-name></h3>
 				<span class="module-level">Level <span data-module-level></span></span>
@@ -135,6 +138,30 @@
 			</div>
 			<div class="actions">
 				<button class="btn install" data-action="upgrade-vault">
+					<span class="label" data-module-action></span>
+					<span class="cost">
+						<span class="cost-val"></span><span class="icon">token</span>
+					</span>
+				</button>
+			</div>
+		</section>
+		<section class="tile module" data-module="generator" data-w="2" data-h="4">
+			<div class="module-header">
+				<h3 data-module-name></h3>
+				<span class="module-level">Level <span data-module-level></span></span>
+			</div>
+			<div class="module-section">
+				<h4>Active:</h4>
+				<div class="effects-list" data-module-effects>
+					<span class="inactive">—</span>
+				</div>
+			</div>
+			<div class="module-section">
+				<h4>Next Level:</h4>
+				<div class="next-effects" data-module-next-effects></div>
+			</div>
+			<div class="actions">
+				<button class="btn install" data-action="upgrade-generator">
 					<span class="label" data-module-action></span>
 					<span class="cost">
 						<span class="cost-val"></span><span class="icon">token</span>

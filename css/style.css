@@ -7,7 +7,8 @@
     --font-mono: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
 
     color-scheme: dark;
-    --hue: 220; /* between 220 at 0% wear and 280 at 100% wear */
+    --hue: 220;
+    /* between 220 at 0% wear and 280 at 100% wear */
     --tick-duration: 6s;
     /* calm blue base, can turn red, when engine gets damaged */
     --bg-color: hsl(var(--hue) 30% 15%);
@@ -479,9 +480,13 @@ TICK TILE
 -------------------------------------------------------------------
 */
 
+.tile.tick {
+    gap: 0px;
+}
+
 /* Size + colors are overrideable per tile */
 .tile.tick .dial {
-    --size: 90px;
+    --size: 110px;
     --thick: 0px;
 }
 
@@ -492,7 +497,8 @@ OUTPUT TILE
 */
 
 .tile.output .fill {
-    --q: 0.5; /* static color (yellow), does not react to --p */
+    --q: 0.5;
+    /* static color (yellow), does not react to --p */
 }
 
 /*
@@ -510,8 +516,8 @@ ACTIONS
 }
 
 .btn {
-    --btn-bg: hsla(0,0%,100%,0.15);
-    --btn-brd: hsla(0,0%,100%,0.35);
+    --btn-bg: hsla(0, 0%, 100%, 0.15);
+    --btn-brd: hsla(0, 0%, 100%, 0.35);
     --btn-txt: var(--font-color);
 
     display: inline-flex;
@@ -525,17 +531,23 @@ ACTIONS
     font-weight: 600;
     line-height: 1;
     cursor: pointer;
-    box-shadow: 0 1px 0 0 hsla(0,0%,100%,.12) inset, 0 4px 10px #0002;
+    box-shadow: 0 1px 0 0 hsla(0, 0%, 100%, .12) inset, 0 4px 10px #0002;
     transition: transform .06s ease, filter .2s ease, background-color .2s ease, border-color .2s ease;
     user-select: none;
 }
 
-.btn .icon { 
+.btn .icon {
     font-weight: 400;
 }
 
-.btn:active { transform: translateY(1px) scale(.99); }
-.btn:hover { filter: brightness(1.1); }
+.btn:active {
+    transform: translateY(1px) scale(.99);
+}
+
+.btn:hover {
+    filter: brightness(1.1);
+}
+
 .btn[disabled] {
     opacity: .5;
     cursor: not-allowed;
@@ -546,13 +558,13 @@ ACTIONS
     margin-left: 2px;
     padding: 2px 6px;
     border-radius: 999px;
-    background: hsla(0,0%,100%,.15);
+    background: hsla(0, 0%, 100%, .15);
     font-family: var(--font-mono);
     font-weight: 400;
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    box-shadow: inset 0 0 0 1px hsla(0,0%,100%,.15);
+    box-shadow: inset 0 0 0 1px hsla(0, 0%, 100%, .15);
     font-size: .95rem;
 }
 
@@ -601,7 +613,8 @@ MODULE TILES
     font-weight: 600;
 }
 
-.effects-list, .next-effects {
+.effects-list,
+.next-effects {
     display: flex;
     flex-direction: column;
     gap: 4px;
