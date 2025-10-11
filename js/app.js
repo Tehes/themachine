@@ -24,7 +24,7 @@ const energyState = {
 const outputState = {
 	current: 0, // tokens
 	capacity: 10, // max tokens
-	prodPerTick: 2, // tokens per tick
+	prodPerTick: 1.5, // tokens per tick
 };
 
 const wearState = {
@@ -35,7 +35,7 @@ const wearState = {
 const heatState = {
 	current: 0,
 	maxHeat: 100,
-	wearMultiplier: 0.1,
+	wearMultiplier: 0.03,
 };
 
 // --- DOM refs ---
@@ -103,11 +103,12 @@ const modules = {
 				label: (val) => `Token Cap +${val}${UNIT_TPL.token}`,
 			},
 			{
-				type: "wearRate",
+				type: "energyCost",
 				value: 0.01,
 				perLevel: true,
 				positive: false,
-				label: (val) => `Wear Rate +${(val * 100).toFixed(1)}${UNIT_TPL.warning}`,
+				label: (val) =>
+					`Energy cost +${val.toFixed(2)}${UNIT_TPL.bolt}/${UNIT_TPL.timelapse}`,
 			},
 		],
 	},
@@ -116,8 +117,8 @@ const modules = {
 		name: "Generator",
 		level: 0,
 		maxLevel: 3,
-		cost: 1,
-		costIncrease: 1,
+		cost: 9,
+		costIncrease: 9,
 		labels: {
 			install: "Install",
 			upgrade: (level) => `Level ${level + 1}`,
@@ -126,14 +127,14 @@ const modules = {
 		effects: [
 			{
 				type: "outputProduction",
-				value: 2,
+				value: 1,
 				perLevel: true,
 				positive: true,
 				label: (val) => `Token output +${val}${UNIT_TPL.token}/${UNIT_TPL.timelapse}`,
 			},
 			{
 				type: "heatGeneration",
-				value: 1,
+				value: 30,
 				perLevel: true,
 				positive: false,
 				label: (val) => `Heat +${val}${UNIT_TPL.heat}`,
@@ -159,18 +160,16 @@ const effectHandlers = {
 		outputState.capacity += value;
 	},
 	wearRate: (value) => {
-		wearState.perTick += value;
+		wearState.perTick = Math.min(1, Math.max(0, wearState.perTick + value));
 	},
 	energyCapacity: (value) => {
 		energyState.capacity += value;
 	},
 	energyCost: (value) => {
-		energyState.consPerTick += value;
+		energyState.costGrowth += value;
 	},
 	heatGeneration: (value) => {
-		heatState.current += value;
-		heatState.current = Math.min(heatState.maxHeat, Math.max(0, heatState.current));
-		wearState.perTick += heatState.wearMultiplier / 100 * heatState.current;
+		heatState.current = Math.min(heatState.maxHeat, Math.max(0, heatState.current + value));
 	},
 	outputProduction: (value) => {
 		outputState.prodPerTick += value;
@@ -272,7 +271,8 @@ function renderWear() {
 
 	if (wearEls.fill) wearEls.fill.style.setProperty("--p", wearState.current);
 	if (wearEls.val) wearEls.val.textContent = (wearState.current * 100).toFixed(1);
-	if (wearEls.cons) wearEls.cons.textContent = (wearState.perTick * 100).toFixed(2);
+	const totalPerTick = wearState.perTick + (heatState.current * heatState.wearMultiplier) / 100;
+	if (wearEls.cons) wearEls.cons.textContent = (totalPerTick * 100).toFixed(2);
 }
 
 function renderOutput() {
@@ -355,8 +355,9 @@ function applyTick() {
 	// Energy drains by integer units per tick
 	energyState.current = Math.max(0, energyState.current - energyState.consPerTick);
 
-	// Wear increases
-	wearState.current = clamp01(wearState.current + wearState.perTick);
+	// Wear increases (base + heat-amplified)
+	const heatWear = (heatState.current * heatState.wearMultiplier) / 100;
+	wearState.current = clamp01(wearState.current + wearState.perTick + heatWear);
 }
 
 function startTicks() {
