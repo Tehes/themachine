@@ -15,7 +15,7 @@ let running = false;
 
 // --- Core State ---
 const energyState = {
-	current: 10,
+	current: 5,
 	capacity: 10,
 	consPerTick: 1,
 	costGrowth: 0.02,
@@ -35,7 +35,7 @@ const wearState = {
 const heatState = {
 	current: 0,
 	maxHeat: 100,
-	wearMultiplier: 0.03,
+	wearMultiplier: 0.15,
 };
 
 // --- DOM refs ---
@@ -127,7 +127,7 @@ const modules = {
 		effects: [
 			{
 				type: "outputProduction",
-				value: 1,
+				value: 3,
 				perLevel: true,
 				positive: true,
 				label: (val) => `Token output +${val}${UNIT_TPL.token}/${UNIT_TPL.timelapse}`,
