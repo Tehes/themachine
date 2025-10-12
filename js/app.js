@@ -117,8 +117,8 @@ const modules = {
 		name: "Generator",
 		level: 0,
 		maxLevel: 3,
-		cost: 8,
-		costIncrease: 8,
+		cost: 7,
+		costIncrease: 7,
 		labels: {
 			install: "Install",
 			upgrade: (level) => `Level ${level + 1}`,
@@ -134,7 +134,7 @@ const modules = {
 			},
 			{
 				type: "scaleBuyEnergy",
-				value: { factor: 2, discount: 10 },
+				value: { factor: 1.5, discount: 10 },
 				perLevel: false,
 				positive: true,
 				label: (val) => `Buy ×${val.factor}${UNIT_TPL.bolt} for less ${UNIT_TPL.token}`,
@@ -145,6 +145,74 @@ const modules = {
 				perLevel: true,
 				positive: false,
 				label: (val) => `+${val}${UNIT_TPL.heat}`,
+			},
+		],
+	},
+	cooling: {
+		id: "cooling",
+		name: "Cooling",
+		level: 0,
+		maxLevel: 3,
+		cost: 12,
+		costIncrease: 12,
+		labels: {
+			install: "Install",
+			upgrade: (level) => `Level ${level + 1}`,
+			maxLevel: "Max Level",
+		},
+		effects: [
+			{
+				type: "heatGeneration",
+				value: -20,
+				perLevel: true,
+				positive: true,
+				label: (val) => `${val}${UNIT_TPL.heat}`,
+			},
+			{
+				type: "scaleRepairWear",
+				value: { factor: 1.5, discount: 12 },
+				perLevel: false,
+				positive: true,
+				label: (val) =>
+					`Repair ×${val.factor}${UNIT_TPL.warning} for less ${UNIT_TPL.token}`,
+			},
+			{
+				type: "outputProduction",
+				value: -0.5,
+				perLevel: true,
+				positive: false,
+				label: (v) =>
+					`output ${v >= 0 ? "+" : ""}${fmt2(v)}${UNIT_TPL.token}/${UNIT_TPL.timelapse}`,
+			},
+		],
+	},
+	battery: {
+		id: "battery",
+		name: "Battery",
+		level: 0,
+		maxLevel: 3,
+		cost: 9,
+		costIncrease: 9,
+		labels: {
+			install: "Install",
+			upgrade: (level) => `Level ${level + 1}`,
+			maxLevel: "Max Level",
+		},
+		effects: [
+			{
+				type: "energyCapacity",
+				value: 10,
+				perLevel: true,
+				positive: true,
+				label: (v) => `Energy Cap +${v}${UNIT_TPL.bolt}`,
+			},
+			{
+				type: "energyCost",
+				value: 0.01,
+				perLevel: true,
+				positive: false,
+				label: (val) =>
+					`consumption +${val.toFixed(2)}${UNIT_TPL.bolt}/${UNIT_TPL.timelapse}`,
 			},
 		],
 	},
@@ -185,7 +253,17 @@ const effectHandlers = {
 		const { factor, discount } = value;
 		const btn = document.querySelector('.btn[data-action="buy-energy"]');
 		if (!btn) return;
-		btn.dataset.amount = Number(btn.dataset.amount || 0) * factor;
+		btn.dataset.amount = Math.round(Number(btn.dataset.amount || 0) * factor);
+		btn.dataset.cost = Math.floor(
+			Number(btn.dataset.cost || 0) * (factor * 1 - discount / 100),
+		);
+		renderButtons();
+	},
+	scaleRepairWear: (value) => {
+		const { factor, discount } = value;
+		const btn = document.querySelector('.btn[data-action="repair-wear"]');
+		if (!btn) return;
+		btn.dataset.amount = Math.round(Number(btn.dataset.amount || 0) * factor);
 		btn.dataset.cost = Math.floor(
 			Number(btn.dataset.cost || 0) * (factor * 1 - discount / 100),
 		);
@@ -429,6 +507,7 @@ function refreshButtons() {
 		const action = btn.dataset.action;
 		const cost = Number(btn.dataset.cost ?? btn.querySelector(".cost-val")?.textContent ?? 0);
 		const amount = Number(btn.dataset.amount ?? btn.querySelector(".amount")?.textContent ?? 0);
+		let moduleRef = null;
 
 		let enabled = false;
 
@@ -444,57 +523,45 @@ function refreshButtons() {
 				break;
 			}
 			case "upgrade-vault": {
-				const module = modules.vault;
-
-				enabled = module.level < module.maxLevel && outputState.current >= module.cost;
-
-				const labelEl = btn.querySelector("[data-module-action]");
-				if (labelEl) {
-					labelEl.textContent = module.level === 0
-						? module.labels.install
-						: module.level >= module.maxLevel
-						? module.labels.maxLevel
-						: module.labels.upgrade(module.level);
-				}
-
-				if (module.level >= module.maxLevel) {
-					btn.querySelector(".cost").hidden = true;
-				} else {
-					btn.querySelector(".cost").hidden = false;
-					btn.dataset.cost = module.cost;
-					const costEl = btn.querySelector(".cost-val");
-					if (costEl) costEl.textContent = module.cost;
-				}
-
+				moduleRef = modules.vault;
 				break;
 			}
 			case "upgrade-generator": {
-				const module = modules.generator;
-
-				enabled = module.level < module.maxLevel && outputState.current >= module.cost;
-				const labelEl = btn.querySelector("[data-module-action]");
-				if (labelEl) {
-					labelEl.textContent = module.level === 0
-						? module.labels.install
-						: module.level >= module.maxLevel
-						? module.labels.maxLevel
-						: module.labels.upgrade(module.level);
-				}
-
-				if (module.level >= module.maxLevel) {
-					btn.querySelector(".cost").hidden = true;
-				} else {
-					btn.querySelector(".cost").hidden = false;
-					btn.dataset.cost = module.cost;
-					const costEl = btn.querySelector(".cost-val");
-					if (costEl) costEl.textContent = module.cost;
-				}
-
+				moduleRef = modules.generator;
+				break;
+			}
+			case "upgrade-battery": {
+				moduleRef = modules.battery;
+				break;
+			}
+			case "upgrade-cooling": {
+				moduleRef = modules.cooling;
 				break;
 			}
 
 			default:
 				enabled = false;
+		}
+
+		if (moduleRef) {
+			enabled = moduleRef.level < moduleRef.maxLevel && outputState.current >= moduleRef.cost;
+			const labelEl = btn.querySelector("[data-module-action]");
+			if (labelEl) {
+				labelEl.textContent = moduleRef.level === 0
+					? moduleRef.labels.install
+					: moduleRef.level >= moduleRef.maxLevel
+					? moduleRef.labels.maxLevel
+					: moduleRef.labels.upgrade(moduleRef.level);
+			}
+
+			if (moduleRef.level >= moduleRef.maxLevel) {
+				btn.querySelector(".cost").hidden = true;
+			} else {
+				btn.querySelector(".cost").hidden = false;
+				btn.dataset.cost = moduleRef.cost;
+				const costEl = btn.querySelector(".cost-val");
+				if (costEl) costEl.textContent = moduleRef.cost;
+			}
 		}
 
 		btn.disabled = !enabled;
@@ -541,6 +608,23 @@ function executeAction(btn) {
 			}
 			break;
 		}
+		case "upgrade-battery": {
+			if (upgradeModule("battery")) {
+				renderModule("battery");
+				renderOutput();
+				renderEnergy();
+			}
+			break;
+		}
+		case "upgrade-cooling": {
+			if (upgradeModule("cooling")) {
+				renderModule("cooling");
+				renderHeat();
+				renderWear();
+				renderOutput();
+			}
+			break;
+		}
 
 		default:
 			console.warn("Unhandled action:", action);
@@ -562,6 +646,8 @@ function init() {
 	renderOutput();
 	renderModule("vault");
 	renderModule("generator");
+	renderModule("battery");
+	renderModule("cooling");
 	renderTickStatic();
 	startTicks();
 	renderButtons();
