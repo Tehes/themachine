@@ -35,7 +35,7 @@ const wearState = {
 const heatState = {
 	current: 0,
 	maxHeat: 100,
-	wearMultiplier: 0.15,
+	wearMultiplier: 0.13,
 };
 
 // --- DOM refs ---
@@ -87,8 +87,8 @@ const modules = {
 		name: "Vault",
 		level: 0,
 		maxLevel: 3,
-		cost: 9,
-		costIncrease: 9,
+		cost: 10,
+		costIncrease: 10,
 		labels: {
 			install: "Install",
 			upgrade: (level) => `Level ${level + 1}`,
@@ -117,8 +117,8 @@ const modules = {
 		name: "Generator",
 		level: 0,
 		maxLevel: 3,
-		cost: 9,
-		costIncrease: 9,
+		cost: 8,
+		costIncrease: 8,
 		labels: {
 			install: "Install",
 			upgrade: (level) => `Level ${level + 1}`,
@@ -134,10 +134,10 @@ const modules = {
 			},
 			{
 				type: "scaleBuyEnergy",
-				value: 2,
+				value: { factor: 2, discount: 10 },
 				perLevel: false,
 				positive: true,
-				label: (val) => `Buy ${UNIT_TPL.bolt}: ×${val}`,
+				label: (val) => `Buy ×${val.factor}${UNIT_TPL.bolt} for less ${UNIT_TPL.token}`,
 			},
 			{
 				type: "heatGeneration",
@@ -181,11 +181,14 @@ const effectHandlers = {
 	outputProduction: (value) => {
 		outputState.prodPerTick += value;
 	},
-	scaleBuyEnergy: (factor) => {
+	scaleBuyEnergy: (value) => {
+		const { factor, discount } = value;
 		const btn = document.querySelector('.btn[data-action="buy-energy"]');
 		if (!btn) return;
 		btn.dataset.amount = Number(btn.dataset.amount || 0) * factor;
-		btn.dataset.cost = Number(btn.dataset.cost || 0) * factor;
+		btn.dataset.cost = Math.floor(
+			Number(btn.dataset.cost || 0) * (factor * 1 - discount / 100),
+		);
 		renderButtons();
 	},
 };
