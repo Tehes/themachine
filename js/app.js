@@ -108,7 +108,7 @@ const modules = {
 				perLevel: true,
 				positive: false,
 				label: (val) =>
-					`Energy cost +${val.toFixed(2)}${UNIT_TPL.bolt}/${UNIT_TPL.timelapse}`,
+					`consumption +${val.toFixed(2)}${UNIT_TPL.bolt}/${UNIT_TPL.timelapse}`,
 			},
 		],
 	},
@@ -130,14 +130,21 @@ const modules = {
 				value: 3,
 				perLevel: true,
 				positive: true,
-				label: (val) => `Token output +${val}${UNIT_TPL.token}/${UNIT_TPL.timelapse}`,
+				label: (val) => `output +${val}${UNIT_TPL.token}/${UNIT_TPL.timelapse}`,
+			},
+			{
+				type: "scaleBuyEnergy",
+				value: 2,
+				perLevel: false,
+				positive: true,
+				label: (val) => `Buy ${UNIT_TPL.bolt}: ×${val}`,
 			},
 			{
 				type: "heatGeneration",
 				value: 30,
 				perLevel: true,
 				positive: false,
-				label: (val) => `Heat +${val}${UNIT_TPL.heat}`,
+				label: (val) => `+${val}${UNIT_TPL.heat}`,
 			},
 		],
 	},
@@ -173,6 +180,13 @@ const effectHandlers = {
 	},
 	outputProduction: (value) => {
 		outputState.prodPerTick += value;
+	},
+	scaleBuyEnergy: (factor) => {
+		const btn = document.querySelector('.btn[data-action="buy-energy"]');
+		if (!btn) return;
+		btn.dataset.amount = Number(btn.dataset.amount || 0) * factor;
+		btn.dataset.cost = Number(btn.dataset.cost || 0) * factor;
+		renderButtons();
 	},
 };
 
@@ -244,7 +258,6 @@ function renderModule(moduleId) {
 		} else {
 			const nextHtml = module.effects.map((eff) => {
 				const cssClass = eff.positive ? "positive" : "negative";
-				// NEU: Zeige kumulativen Wert nach dem Upgrade
 				const nextTotalValue = eff.perLevel ? eff.value * (module.level + 1) : eff.value;
 				return `<div class="effect-item ${cssClass}">→ ${eff.label(nextTotalValue)}</div>`;
 			}).join("");
@@ -263,8 +276,8 @@ function renderEnergy() {
 }
 
 function renderWear() {
-	const hueStart = 220; // blau (0% wear)
-	const hueEnd = 280; // violett/magenta (100% wear)
+	const hueStart = 220; // blue (0% wear)
+	const hueEnd = 280; // purple (100% wear)
 	const hue = hueStart + (wearState.current * (hueEnd - hueStart));
 
 	document.documentElement.style.setProperty("--hue", Math.round(hue));
